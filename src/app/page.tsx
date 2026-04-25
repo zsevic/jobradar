@@ -24,7 +24,7 @@ export default function Home() {
             href="/login"
             className="rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-950 transition hover:bg-cyan-300"
           >
-            Login
+            Find jobs before everyone else
           </Link>
         </div>
       </section>
