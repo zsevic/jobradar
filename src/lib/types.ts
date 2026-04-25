@@ -14,9 +14,16 @@ export interface Job {
   isRemote: boolean;
   postedAt: string;
   isNew: boolean;
+  url?: string;
+  stack?: string[];
+  seniority?: Seniority;
+}
+
+/** Full job row returned by `GET /api/jobs` (dashboard). */
+export interface DashboardJob extends Omit<Job, "stack" | "seniority" | "url"> {
   url: string;
   stack: string[];
-  seniority: Seniority;
+  seniority: Seniority | null;
 }
 
 export interface FilterPreset {

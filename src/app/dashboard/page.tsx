@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { fetchDashboardJobs } from "@/lib/api";
+import type { DashboardJob } from "@/lib/types";
 import { formatPostedAgo } from "@/lib/utils";
 
 export default function DashboardPage() {
@@ -37,7 +38,7 @@ export default function DashboardPage() {
 
       {jobsQuery.data && (
         <section className="space-y-3">
-          {jobsQuery.data.map((job) => (
+          {jobsQuery.data.map((job: DashboardJob) => (
             <article key={job.id} className="card p-5">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-semibold">{job.title}</h2>
@@ -58,14 +59,22 @@ export default function DashboardPage() {
               <p className="mt-1 text-sm text-slate-400">
                 {formatPostedAgo(job.postedAt)}
               </p>
-              <a
-                href={job.url}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-flex rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-700"
-              >
-                View job
-              </a>
+              <p className="mt-2 text-sm text-slate-400">
+                Stack:{" "}
+                {job.stack.length > 0 ? job.stack.join(", ") : "—"}
+                {" · "}
+                Seniority: {job.seniority ?? "—"}
+              </p>
+              {job.url && (
+                <a
+                  href={job.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-700"
+                >
+                  View job
+                </a>
+              )}
             </article>
           ))}
         </section>

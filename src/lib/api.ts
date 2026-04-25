@@ -1,4 +1,10 @@
-import { FilterPreset, Job, LoginPayload, LoginResponse } from "@/lib/types";
+import {
+  DashboardJob,
+  FilterPreset,
+  Job,
+  LoginPayload,
+  LoginResponse,
+} from "@/lib/types";
 
 const defaultHeaders = {
   "Content-Type": "application/json",
@@ -31,7 +37,7 @@ function getAuthHeaders() {
 }
 
 export async function fetchLatestJobs(): Promise<Job[]> {
-  const response = await fetch("/api/public/latest-jobs", {
+  const response = await fetch(`${backendBaseUrl}/jobs/latest`, {
     cache: "no-store",
   });
   return parseJson<Job[]>(response);
@@ -55,9 +61,9 @@ export async function savePreset(payload: FilterPreset): Promise<FilterPreset> {
   return parseJson<FilterPreset>(response);
 }
 
-export async function fetchDashboardJobs(): Promise<Job[]> {
+export async function fetchDashboardJobs(): Promise<DashboardJob[]> {
   const response = await fetch(`${backendBaseUrl}/jobs`, {
     cache: "no-store",
   });
-  return parseJson<Job[]>(response);
+  return parseJson<DashboardJob[]>(response);
 }

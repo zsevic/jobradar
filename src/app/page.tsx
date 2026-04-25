@@ -1,11 +1,14 @@
 import Link from "next/link";
+import { fetchLatestJobs } from "@/lib/api";
 import { mockJobs } from "@/lib/mock-data";
 import { formatPostedAgo } from "@/lib/utils";
 
-export default function Home() {
-  const latestJobs = [...mockJobs]
-    .sort((a, b) => +new Date(b.postedAt) - +new Date(a.postedAt))
-    .slice(0, 5);
+export default async function Home() {
+  const latestJobs = await fetchLatestJobs().catch(() =>
+    [...mockJobs]
+      .sort((a, b) => +new Date(b.postedAt) - +new Date(a.postedAt))
+      .slice(0, 5),
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">
