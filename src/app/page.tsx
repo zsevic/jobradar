@@ -15,7 +15,7 @@ export default async function Home() {
       <section className="card p-8">
         <p className="text-sm font-medium text-cyan-300">jobradar.tech</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight">
-          Get personalized tech jobs within minutes of posting.
+          Increase your chances of getting hired by applying earlier.
         </h1>
         <p className="mt-4 max-w-2xl text-slate-300">
           We track real company job boards, filter by your profile, and send
