@@ -12,7 +12,7 @@ export default function Home() {
       <section className="card p-8">
         <p className="text-sm font-medium text-cyan-300">jobradar.tech</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight">
-          Get relevant tech jobs within minutes of posting.
+          Get personalized tech jobs within minutes of posting.
         </h1>
         <p className="mt-4 max-w-2xl text-slate-300">
           JobRadar monitors real company career pages, filters every role to
