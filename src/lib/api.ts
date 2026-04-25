@@ -16,6 +16,20 @@ async function parseJson<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+function getAuthHeaders() {
+  if (typeof window === "undefined") {
+    return defaultHeaders;
+  }
+  const token = localStorage.getItem("jobradar_token");
+  if (!token) {
+    return defaultHeaders;
+  }
+  return {
+    ...defaultHeaders,
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 export async function fetchLatestJobs(): Promise<Job[]> {
   const response = await fetch("/api/public/latest-jobs", {
     cache: "no-store",
@@ -33,16 +47,16 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
 }
 
 export async function savePreset(payload: FilterPreset): Promise<FilterPreset> {
-  const response = await fetch("/api/onboarding/preset", {
+  const response = await fetch(`${backendBaseUrl}/onboarding/preset`, {
     method: "POST",
-    headers: defaultHeaders,
+    headers: getAuthHeaders(),
     body: JSON.stringify(payload),
   });
   return parseJson<FilterPreset>(response);
 }
 
 export async function fetchDashboardJobs(): Promise<Job[]> {
-  const response = await fetch("/api/jobs", {
+  const response = await fetch(`${backendBaseUrl}/jobs`, {
     cache: "no-store",
   });
   return parseJson<Job[]>(response);
