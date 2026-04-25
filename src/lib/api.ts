@@ -3,6 +3,8 @@ import { FilterPreset, Job, LoginPayload, LoginResponse } from "@/lib/types";
 const defaultHeaders = {
   "Content-Type": "application/json",
 };
+const backendBaseUrl =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api";
 
 async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
@@ -22,7 +24,7 @@ export async function fetchLatestJobs(): Promise<Job[]> {
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  const response = await fetch("/api/auth/login", {
+  const response = await fetch(`${backendBaseUrl}/auth/login`, {
     method: "POST",
     headers: defaultHeaders,
     body: JSON.stringify(payload),
