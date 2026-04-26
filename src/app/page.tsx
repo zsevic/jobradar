@@ -19,7 +19,7 @@ export default async function Home() {
         </h1>
         <p className="mt-4 max-w-2xl text-slate-300">
           We track real company job boards, filter by your profile, and send
-          only high-match roles - so you can apply early and stay ahead.
+          only relevant roles - so you can apply early and stay ahead.
         </p>
         <div className="mt-6 flex gap-3">
           <Link
