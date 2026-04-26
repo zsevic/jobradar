@@ -1,44 +1,17 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
-import { savePreset } from "@/lib/api";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { fetchPreset, savePreset } from "@/lib/api";
+import {
+  locationOptions,
+  noStackRoles,
+  roleOptions,
+  seniorityOptions,
+  stackByRole,
+} from "@/lib/onboarding-options";
 import { LocationOption, Seniority, StackOption, UserRole } from "@/lib/types";
-
-const roleOptions: UserRole[] = [
-  "backend",
-  "frontend",
-  "fullstack",
-  "mobile",
-  "devops",
-  "qa",
-];
-const seniorityOptions: Seniority[] = ["junior", "mid", "senior", "staff"];
-const locationOptions: LocationOption[] = ["remote", "EU", "US"];
-const noStackRoles: UserRole[] = ["devops", "qa"];
-
-const stackByRole: Record<UserRole, StackOption[]> = {
-  backend: ["node.js", "python", "golang", "java", ".net", "php"],
-  frontend: ["react", "angular", "vue", "next.js", "nuxt", "svelte"],
-  fullstack: [
-    "node.js",
-    "python",
-    "golang",
-    "java",
-    ".net",
-    "php",
-    "react",
-    "angular",
-    "vue",
-    "next.js",
-    "nuxt",
-    "svelte",
-  ],
-  mobile: ["react native", "swift", "kotlin", "flutter", "dart"],
-  devops: [],
-  qa: [],
-};
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -48,6 +21,17 @@ export default function OnboardingPage() {
   const [locations, setLocations] = useState<LocationOption[]>(["remote"]);
   const isStackRequired = !noStackRoles.includes(role);
   const availableStackOptions = useMemo(() => stackByRole[role], [role]);
+  const presetQuery = useQuery({
+    queryKey: ["preset", "onboarding"],
+    queryFn: fetchPreset,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (presetQuery.data) {
+      router.replace("/dashboard");
+    }
+  }, [presetQuery.data, router]);
 
   const saveMutation = useMutation({
     mutationFn: savePreset,
@@ -101,6 +85,14 @@ export default function OnboardingPage() {
       locations,
       alertsEnabled: true,
     });
+  }
+
+  if (presetQuery.isLoading) {
+    return (
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-10">
+        <div className="card p-6 text-sm text-slate-300">Loading...</div>
+      </main>
+    );
   }
 
   return (

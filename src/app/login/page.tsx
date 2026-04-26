@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { login } from "@/lib/api";
+import { fetchPreset, login } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,10 +12,11 @@ export default function LoginPage() {
 
   const loginMutation = useMutation({
     mutationFn: login,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       localStorage.setItem("jobradar_token", data.accessToken);
       localStorage.setItem("jobradar_email", data.user.email);
-      router.push("/onboarding");
+      const preset = await fetchPreset().catch(() => null);
+      router.push(preset ? "/dashboard" : "/onboarding");
     },
   });
 

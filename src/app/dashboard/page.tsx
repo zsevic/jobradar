@@ -2,14 +2,17 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useState } from "react";
 import { fetchDashboardJobs } from "@/lib/api";
 import type { DashboardJob } from "@/lib/types";
 import { formatPostedAgo } from "@/lib/utils";
 
 export default function DashboardPage() {
+  const [page, setPage] = useState(1);
+  const limit = 20;
   const jobsQuery = useQuery({
-    queryKey: ["dashboard-jobs"],
-    queryFn: fetchDashboardJobs,
+    queryKey: ["dashboard-jobs", page, limit],
+    queryFn: () => fetchDashboardJobs(page, limit),
   });
 
   return (
@@ -21,9 +24,14 @@ export default function DashboardPage() {
             Fresh jobs matched to your filters.
           </p>
         </div>
-        <Link href="/" className="text-sm text-cyan-300 hover:text-cyan-200">
-          Back to landing
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/settings"
+            className="rounded-lg border border-cyan-500/60 px-3 py-1.5 text-sm text-cyan-200 hover:bg-cyan-500/10"
+          >
+            Settings
+          </Link>
+        </div>
       </header>
 
       {jobsQuery.isLoading && (
@@ -38,7 +46,7 @@ export default function DashboardPage() {
 
       {jobsQuery.data && (
         <section className="space-y-3">
-          {jobsQuery.data.map((job: DashboardJob) => (
+          {jobsQuery.data.items.map((job: DashboardJob) => (
             <article key={job.id} className="card p-5">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-semibold">{job.title}</h2>
@@ -77,6 +85,32 @@ export default function DashboardPage() {
               )}
             </article>
           ))}
+
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/60 p-3">
+            <p className="text-sm text-slate-300">
+              Page {jobsQuery.data.page} of {jobsQuery.data.totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.max(current - 1, 1))}
+                disabled={page <= 1}
+                className="rounded-md border border-slate-700 px-3 py-1.5 text-sm text-slate-200 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setPage((current) => Math.min(current + 1, jobsQuery.data.totalPages))
+                }
+                disabled={page >= jobsQuery.data.totalPages}
+                className="rounded-md border border-slate-700 px-3 py-1.5 text-sm text-slate-200 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </section>
       )}
     </main>

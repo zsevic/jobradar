@@ -49,6 +49,14 @@ export interface DashboardJob extends Omit<Job, "stack" | "seniority" | "url"> {
   seniority: Seniority | null;
 }
 
+export interface DashboardJobsPage {
+  items: DashboardJob[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface FilterPreset {
   role: UserRole;
   stack: StackOption[];

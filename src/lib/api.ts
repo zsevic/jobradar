@@ -1,5 +1,5 @@
 import {
-  DashboardJob,
+  DashboardJobsPage,
   FilterPreset,
   Job,
   LoginPayload,
@@ -61,9 +61,28 @@ export async function savePreset(payload: FilterPreset): Promise<FilterPreset> {
   return parseJson<FilterPreset>(response);
 }
 
-export async function fetchDashboardJobs(): Promise<DashboardJob[]> {
-  const response = await fetch(`${backendBaseUrl}/jobs`, {
+export async function fetchPreset(): Promise<FilterPreset | null> {
+  const response = await fetch(`${backendBaseUrl}/onboarding/preset`, {
+    method: "GET",
+    headers: getAuthHeaders(),
     cache: "no-store",
   });
-  return parseJson<DashboardJob[]>(response);
+  if (response.status === 404) {
+    return null;
+  }
+  return parseJson<FilterPreset | null>(response);
+}
+
+export async function fetchDashboardJobs(
+  page = 1,
+  limit = 20,
+): Promise<DashboardJobsPage> {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  const response = await fetch(`${backendBaseUrl}/jobs?${params.toString()}`, {
+    cache: "no-store",
+  });
+  return parseJson<DashboardJobsPage>(response);
 }
