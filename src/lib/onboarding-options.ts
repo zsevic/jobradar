@@ -1,4 +1,4 @@
-import { LocationOption, Seniority, StackOption, UserRole } from "@/lib/types";
+import { Seniority, StackOption, UserRole } from "@/lib/types";
 
 export const roleOptions: UserRole[] = [
   "backend",
@@ -10,7 +10,6 @@ export const roleOptions: UserRole[] = [
 ];
 
 export const seniorityOptions: Seniority[] = ["junior", "mid", "senior", "staff"];
-export const locationOptions: LocationOption[] = ["remote", "EU", "US"];
 export const noStackRoles: UserRole[] = ["devops", "qa"];
 
 export const stackByRole: Record<UserRole, StackOption[]> = {

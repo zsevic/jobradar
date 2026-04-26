@@ -4,14 +4,21 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { fetchPreset, savePreset } from "@/lib/api";
+import { getAllCountryOptions } from "@/lib/countries";
 import {
-  locationOptions,
   noStackRoles,
   roleOptions,
   seniorityOptions,
   stackByRole,
 } from "@/lib/onboarding-options";
-import { FilterPreset, LocationOption, Seniority, StackOption, UserRole } from "@/lib/types";
+import {
+  FilterPreset,
+  LocationOption,
+  REMOTE_LOCATION,
+  Seniority,
+  StackOption,
+  UserRole,
+} from "@/lib/types";
 
 function normalizePreset(preset: FilterPreset): FilterPreset {
   if (noStackRoles.includes(preset.role)) {
@@ -34,15 +41,20 @@ export default function SettingsPage() {
 
   const [draftPreset, setDraftPreset] = useState<FilterPreset | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [countryQuery, setCountryQuery] = useState("");
   const normalizedPreset = presetQuery.data ? normalizePreset(presetQuery.data) : null;
   const preset = draftPreset ?? normalizedPreset;
   const role = preset?.role ?? "backend";
   const stack = preset?.stack ?? ["node.js"];
   const seniority = preset?.seniority ?? "mid";
-  const locations = preset?.locations ?? ["remote"];
+  const locations = preset?.locations ?? [REMOTE_LOCATION];
   const alertsEnabled = preset?.alertsEnabled ?? true;
   const isStackRequired = !noStackRoles.includes(role);
   const availableStackOptions = stackByRole[role];
+  const countryOptions = getAllCountryOptions();
+  const filteredCountryOptions = countryOptions.filter((country) =>
+    country.name.toLowerCase().includes(countryQuery.toLowerCase()),
+  );
 
   const saveMutation = useMutation({
     mutationFn: savePreset,
@@ -216,21 +228,41 @@ export default function SettingsPage() {
 
           <fieldset>
             <legend className="mb-1 text-sm text-slate-300">Locations</legend>
-            <div className="flex flex-wrap gap-2">
-              {locationOptions.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => toggleLocation(option)}
-                  className={`rounded-full border px-3 py-1 text-sm ${
-                    locations.includes(option)
-                      ? "border-cyan-400 bg-cyan-400/10 text-cyan-200"
-                      : "border-slate-700 text-slate-300"
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
+            <div className="space-y-3 rounded-lg border border-slate-800 p-3">
+              <button
+                type="button"
+                onClick={() => toggleLocation(REMOTE_LOCATION)}
+                className={`rounded-full border px-3 py-1 text-sm ${
+                  locations.includes(REMOTE_LOCATION)
+                    ? "border-cyan-400 bg-cyan-400/10 text-cyan-200"
+                    : "border-slate-700 text-slate-300"
+                }`}
+              >
+                Remote
+              </button>
+              <input
+                type="text"
+                value={countryQuery}
+                onChange={(event) => setCountryQuery(event.target.value)}
+                placeholder="Search countries..."
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              />
+              <div className="max-h-44 space-y-1 overflow-y-auto rounded-md border border-slate-800 p-2">
+                {filteredCountryOptions.map((country) => (
+                  <label
+                    key={country.code}
+                    className="flex cursor-pointer items-center gap-2 text-sm text-slate-300"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={locations.includes(country.name)}
+                      onChange={() => toggleLocation(country.name)}
+                      className="h-4 w-4 accent-cyan-400"
+                    />
+                    <span>{country.name}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </fieldset>
 

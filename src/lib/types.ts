@@ -27,7 +27,8 @@ export type StackOption =
 
 export type Seniority = "junior" | "mid" | "senior" | "staff";
 
-export type LocationOption = "remote" | "EU" | "US";
+export type LocationOption = string;
+export const REMOTE_LOCATION = "remote";
 
 export interface Job {
   id: string;

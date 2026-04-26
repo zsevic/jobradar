@@ -4,23 +4,51 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { fetchPreset, savePreset } from "@/lib/api";
+import { getAllCountryOptions, getCountryNameFromLocale } from "@/lib/countries";
 import {
-  locationOptions,
   noStackRoles,
   roleOptions,
   seniorityOptions,
   stackByRole,
 } from "@/lib/onboarding-options";
-import { LocationOption, Seniority, StackOption, UserRole } from "@/lib/types";
+import {
+  LocationOption,
+  REMOTE_LOCATION,
+  Seniority,
+  StackOption,
+  UserRole,
+} from "@/lib/types";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const initialDetectedCountry = useMemo(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    return (
+      getCountryNameFromLocale(navigator.languages?.[0], getAllCountryOptions()) ??
+      getCountryNameFromLocale(navigator.language, getAllCountryOptions())
+    );
+  }, []);
   const [role, setRole] = useState<UserRole>("backend");
   const [stack, setStack] = useState<StackOption[]>(["node.js"]);
   const [seniority, setSeniority] = useState<Seniority>("mid");
-  const [locations, setLocations] = useState<LocationOption[]>(["remote"]);
+  const [locations, setLocations] = useState<LocationOption[]>(
+    initialDetectedCountry
+      ? [REMOTE_LOCATION, initialDetectedCountry]
+      : [REMOTE_LOCATION],
+  );
+  const [countryQuery, setCountryQuery] = useState("");
   const isStackRequired = !noStackRoles.includes(role);
   const availableStackOptions = useMemo(() => stackByRole[role], [role]);
+  const countryOptions = useMemo(() => getAllCountryOptions(), []);
+  const filteredCountryOptions = useMemo(
+    () =>
+      countryOptions.filter((country) =>
+        country.name.toLowerCase().includes(countryQuery.toLowerCase()),
+      ),
+    [countryOptions, countryQuery],
+  );
   const presetQuery = useQuery({
     queryKey: ["preset", "onboarding"],
     queryFn: fetchPreset,
@@ -160,21 +188,41 @@ export default function OnboardingPage() {
 
           <fieldset>
             <legend className="mb-1 text-sm text-slate-300">Locations</legend>
-            <div className="flex flex-wrap gap-2">
-              {locationOptions.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => toggleLocation(option)}
-                  className={`rounded-full border px-3 py-1 text-sm ${
-                    locations.includes(option)
-                      ? "border-cyan-400 bg-cyan-400/10 text-cyan-200"
-                      : "border-slate-700 text-slate-300"
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
+            <div className="space-y-3 rounded-lg border border-slate-800 p-3">
+              <button
+                type="button"
+                onClick={() => toggleLocation(REMOTE_LOCATION)}
+                className={`rounded-full border px-3 py-1 text-sm ${
+                  locations.includes(REMOTE_LOCATION)
+                    ? "border-cyan-400 bg-cyan-400/10 text-cyan-200"
+                    : "border-slate-700 text-slate-300"
+                }`}
+              >
+                Remote
+              </button>
+              <input
+                type="text"
+                value={countryQuery}
+                onChange={(event) => setCountryQuery(event.target.value)}
+                placeholder="Search countries..."
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              />
+              <div className="max-h-44 space-y-1 overflow-y-auto rounded-md border border-slate-800 p-2">
+                {filteredCountryOptions.map((country) => (
+                  <label
+                    key={country.code}
+                    className="flex cursor-pointer items-center gap-2 text-sm text-slate-300"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={locations.includes(country.name)}
+                      onChange={() => toggleLocation(country.name)}
+                      className="h-4 w-4 accent-cyan-400"
+                    />
+                    <span>{country.name}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </fieldset>
 
