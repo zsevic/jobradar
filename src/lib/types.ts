@@ -1,6 +1,29 @@
-export type UserRole = "backend" | "frontend" | "devops" | "qa";
+export type UserRole =
+  | "backend"
+  | "frontend"
+  | "fullstack"
+  | "mobile"
+  | "devops"
+  | "qa";
 
-export type StackOption = "node.js" | "python" | "golang";
+export type StackOption =
+  | "node.js"
+  | "python"
+  | "golang"
+  | "java"
+  | ".net"
+  | "php"
+  | "react"
+  | "angular"
+  | "vue"
+  | "next.js"
+  | "nuxt"
+  | "svelte"
+  | "react native"
+  | "swift"
+  | "kotlin"
+  | "flutter"
+  | "dart";
 
 export type Seniority = "junior" | "mid" | "senior" | "staff";
 

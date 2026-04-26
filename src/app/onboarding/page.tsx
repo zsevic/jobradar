@@ -2,14 +2,43 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { savePreset } from "@/lib/api";
 import { LocationOption, Seniority, StackOption, UserRole } from "@/lib/types";
 
-const roleOptions: UserRole[] = ["backend", "frontend", "devops", "qa"];
-const stackOptions: StackOption[] = ["node.js", "python", "golang"];
+const roleOptions: UserRole[] = [
+  "backend",
+  "frontend",
+  "fullstack",
+  "mobile",
+  "devops",
+  "qa",
+];
 const seniorityOptions: Seniority[] = ["junior", "mid", "senior", "staff"];
 const locationOptions: LocationOption[] = ["remote", "EU", "US"];
+const noStackRoles: UserRole[] = ["devops", "qa"];
+
+const stackByRole: Record<UserRole, StackOption[]> = {
+  backend: ["node.js", "python", "golang", "java", ".net", "php"],
+  frontend: ["react", "angular", "vue", "next.js", "nuxt", "svelte"],
+  fullstack: [
+    "node.js",
+    "python",
+    "golang",
+    "java",
+    ".net",
+    "php",
+    "react",
+    "angular",
+    "vue",
+    "next.js",
+    "nuxt",
+    "svelte",
+  ],
+  mobile: ["react native", "swift", "kotlin", "flutter", "dart"],
+  devops: [],
+  qa: [],
+};
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -17,6 +46,8 @@ export default function OnboardingPage() {
   const [stack, setStack] = useState<StackOption[]>(["node.js"]);
   const [seniority, setSeniority] = useState<Seniority>("mid");
   const [locations, setLocations] = useState<LocationOption[]>(["remote"]);
+  const isStackRequired = !noStackRoles.includes(role);
+  const availableStackOptions = useMemo(() => stackByRole[role], [role]);
 
   const saveMutation = useMutation({
     mutationFn: savePreset,
@@ -41,9 +72,26 @@ export default function OnboardingPage() {
     );
   }
 
+  function onRoleChange(nextRole: UserRole) {
+    setRole(nextRole);
+    const nextOptions = stackByRole[nextRole];
+    if (noStackRoles.includes(nextRole)) {
+      setStack([]);
+      return;
+    }
+
+    setStack((current) => {
+      const filtered = current.filter((entry) => nextOptions.includes(entry));
+      if (filtered.length > 0) {
+        return filtered;
+      }
+      return nextOptions.length > 0 ? [nextOptions[0]] : [];
+    });
+  }
+
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (stack.length === 0 || locations.length === 0) {
+    if ((isStackRequired && stack.length === 0) || locations.length === 0) {
       return;
     }
     saveMutation.mutate({
@@ -68,7 +116,7 @@ export default function OnboardingPage() {
             <span className="mb-1 block text-sm text-slate-300">Role</span>
             <select
               value={role}
-              onChange={(event) => setRole(event.target.value as UserRole)}
+              onChange={(event) => onRoleChange(event.target.value as UserRole)}
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
             >
               {roleOptions.map((option) => (
@@ -79,25 +127,27 @@ export default function OnboardingPage() {
             </select>
           </label>
 
-          <fieldset>
-            <legend className="mb-1 text-sm text-slate-300">Stack</legend>
-            <div className="flex flex-wrap gap-2">
-              {stackOptions.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => toggleStack(option)}
-                  className={`rounded-full border px-3 py-1 text-sm ${
-                    stack.includes(option)
-                      ? "border-cyan-400 bg-cyan-400/10 text-cyan-200"
-                      : "border-slate-700 text-slate-300"
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          {isStackRequired && (
+            <fieldset>
+              <legend className="mb-1 text-sm text-slate-300">Stack</legend>
+              <div className="flex flex-wrap gap-2">
+                {availableStackOptions.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => toggleStack(option)}
+                    className={`rounded-full border px-3 py-1 text-sm ${
+                      stack.includes(option)
+                        ? "border-cyan-400 bg-cyan-400/10 text-cyan-200"
+                        : "border-slate-700 text-slate-300"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
           <label className="block">
             <span className="mb-1 block text-sm text-slate-300">Seniority</span>
@@ -144,7 +194,7 @@ export default function OnboardingPage() {
 
           <button
             type="submit"
-            disabled={saveMutation.isPending || stack.length === 0}
+            disabled={saveMutation.isPending || (isStackRequired && stack.length === 0)}
             className="w-full rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-slate-950 disabled:opacity-60"
           >
             {saveMutation.isPending ? "Saving..." : "Continue to dashboard"}
