@@ -18,8 +18,8 @@ export default async function Home() {
           Increase your chances of getting hired by applying earlier.
         </h1>
         <p className="mt-4 max-w-2xl text-slate-300">
-          We track real company job boards, filter by your profile, and send
-          only relevant roles - so you can apply early and stay ahead.
+          We scan real company job boards and send only new, relevant roles
+          matched to your profile - so you can apply early and stay ahead.
         </p>
         <div className="mt-6 flex gap-3">
           <Link
