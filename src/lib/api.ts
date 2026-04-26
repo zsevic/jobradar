@@ -82,6 +82,7 @@ export async function fetchDashboardJobs(
     limit: String(limit),
   });
   const response = await fetch(`${backendBaseUrl}/jobs?${params.toString()}`, {
+    headers: getAuthHeaders(),
     cache: "no-store",
   });
   return parseJson<DashboardJobsPage>(response);
