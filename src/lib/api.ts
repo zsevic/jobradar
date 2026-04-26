@@ -12,6 +12,16 @@ const defaultHeaders = {
 const backendBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api";
 
+function toFilterPreset(value: FilterPreset): FilterPreset {
+  return {
+    role: value.role,
+    stack: value.stack,
+    seniority: value.seniority,
+    locations: value.locations,
+    alertsEnabled: value.alertsEnabled,
+  };
+}
+
 async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const errorBody = (await response.json().catch(() => ({}))) as {
@@ -53,12 +63,14 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
 }
 
 export async function savePreset(payload: FilterPreset): Promise<FilterPreset> {
+  const safePayload = toFilterPreset(payload);
   const response = await fetch(`${backendBaseUrl}/onboarding/preset`, {
     method: "POST",
     headers: getAuthHeaders(),
-    body: JSON.stringify(payload),
+    body: JSON.stringify(safePayload),
   });
-  return parseJson<FilterPreset>(response);
+  const data = await parseJson<FilterPreset>(response);
+  return toFilterPreset(data);
 }
 
 export async function fetchPreset(): Promise<FilterPreset | null> {
@@ -70,7 +82,11 @@ export async function fetchPreset(): Promise<FilterPreset | null> {
   if (response.status === 404) {
     return null;
   }
-  return parseJson<FilterPreset | null>(response);
+  const data = await parseJson<FilterPreset | null>(response);
+  if (!data) {
+    return null;
+  }
+  return toFilterPreset(data);
 }
 
 export async function fetchDashboardJobs(

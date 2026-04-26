@@ -33,6 +33,7 @@ export default function SettingsPage() {
   });
 
   const [draftPreset, setDraftPreset] = useState<FilterPreset | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const normalizedPreset = presetQuery.data ? normalizePreset(presetQuery.data) : null;
   const preset = draftPreset ?? normalizedPreset;
   const role = preset?.role ?? "backend";
@@ -45,6 +46,9 @@ export default function SettingsPage() {
 
   const saveMutation = useMutation({
     mutationFn: savePreset,
+    onSuccess: () => {
+      window.alert("Settings updated successfully.");
+    },
   });
 
   function toggleStack(value: StackOption) {
@@ -94,10 +98,17 @@ export default function SettingsPage() {
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if ((isStackRequired && stack.length === 0) || locations.length === 0) {
+    setFormError(null);
+    if (isStackRequired && stack.length === 0) {
+      setFormError("Please select at least one stack option.");
+      return;
+    }
+    if (locations.length === 0) {
+      setFormError("Please select at least one location.");
       return;
     }
     if (!preset) {
+      setFormError("Unable to save settings. Please reload the page.");
       return;
     }
     saveMutation.mutate(preset);
@@ -244,13 +255,14 @@ export default function SettingsPage() {
           {saveMutation.error && (
             <p className="text-sm text-red-300">{(saveMutation.error as Error).message}</p>
           )}
+          {formError && <p className="text-sm text-red-300">{formError}</p>}
           {saveMutation.isSuccess && (
             <p className="text-sm text-emerald-300">Settings saved.</p>
           )}
 
           <button
             type="submit"
-            disabled={saveMutation.isPending || (isStackRequired && stack.length === 0)}
+            disabled={saveMutation.isPending}
             className="w-full rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-slate-950 disabled:opacity-60"
           >
             {saveMutation.isPending ? "Saving..." : "Save settings"}
