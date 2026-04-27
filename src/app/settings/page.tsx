@@ -1,8 +1,9 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
 import { fetchPreset, savePreset } from "@/lib/api";
 import { getAllCountryOptions } from "@/lib/countries";
 import {
@@ -33,11 +34,20 @@ function normalizePreset(preset: FilterPreset): FilterPreset {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const presetQuery = useQuery({
     queryKey: ["preset", "settings"],
     queryFn: fetchPreset,
     retry: false,
   });
+
+  useEffect(() => {
+    if (!presetQuery.isSuccess || presetQuery.data !== null) {
+      return;
+    }
+    router.replace("/onboarding");
+  }, [presetQuery.isSuccess, presetQuery.data, router]);
 
   const [draftPreset, setDraftPreset] = useState<FilterPreset | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -59,6 +69,7 @@ export default function SettingsPage() {
   const saveMutation = useMutation({
     mutationFn: savePreset,
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["preset"] });
       window.alert("Settings updated successfully.");
     },
   });
@@ -134,14 +145,24 @@ export default function SettingsPage() {
     );
   }
 
-  if (!presetQuery.data) {
+  if (presetQuery.isError) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-10">
         <div className="card p-6">
-          <h1 className="text-xl font-semibold">Settings unavailable</h1>
+          <h1 className="text-xl font-semibold">Could not load settings</h1>
           <p className="mt-2 text-sm text-slate-400">
-            Complete onboarding first to create your filter preset.
+            {(presetQuery.error as Error).message}
           </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (presetQuery.isSuccess && presetQuery.data === null) {
+    return (
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-10">
+        <div className="card p-6 text-sm text-slate-300">
+          Redirecting to onboarding…
         </div>
       </main>
     );

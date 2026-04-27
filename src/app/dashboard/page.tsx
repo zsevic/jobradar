@@ -3,13 +3,24 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
-import { fetchDashboardJobs } from "@/lib/api";
+import { fetchDashboardJobs, fetchPreset } from "@/lib/api";
+import { noStackRoles } from "@/lib/onboarding-options";
 import type { DashboardJob } from "@/lib/types";
+import { REMOTE_LOCATION } from "@/lib/types";
 import { formatPostedAgo } from "@/lib/utils";
+
+function formatLocationLabel(location: string): string {
+  return location === REMOTE_LOCATION ? "Remote" : location;
+}
 
 export default function DashboardPage() {
   const [page, setPage] = useState(1);
   const limit = 20;
+  const presetQuery = useQuery({
+    queryKey: ["preset"],
+    queryFn: fetchPreset,
+    retry: false,
+  });
   const jobsQuery = useQuery({
     queryKey: ["dashboard-jobs", page, limit],
     queryFn: () => fetchDashboardJobs(page, limit),
@@ -23,6 +34,20 @@ export default function DashboardPage() {
           <p className="mt-1 text-slate-400">
             Fresh jobs matched to your filters.
           </p>
+          {presetQuery.data && (
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              <span className="font-medium text-slate-300">Active filters:</span>{" "}
+              {presetQuery.data.role}
+              {!noStackRoles.includes(presetQuery.data.role) &&
+                presetQuery.data.stack.length > 0 && (
+                  <> · {presetQuery.data.stack.join(", ")}</>
+                )}
+              {" · "}
+              {presetQuery.data.seniority}
+              {" · "}
+              {presetQuery.data.locations.map(formatLocationLabel).join(" · ")}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <Link
@@ -44,7 +69,18 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {jobsQuery.data && (
+      {jobsQuery.data && jobsQuery.data.items.length === 0 && (
+        <div className="card p-5 text-slate-400">
+          No jobs match your filters right now. Try widening your locations or stack
+          in{" "}
+          <Link href="/settings" className="text-cyan-300 underline">
+            Settings
+          </Link>
+          .
+        </div>
+      )}
+
+      {jobsQuery.data && jobsQuery.data.items.length > 0 && (
         <section className="space-y-3">
           {jobsQuery.data.items.map((job: DashboardJob) => (
             <article key={job.id} className="card p-5">
@@ -88,7 +124,10 @@ export default function DashboardPage() {
 
           <div className="mt-4 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/60 p-3">
             <p className="text-sm text-slate-300">
-              Page {jobsQuery.data.page} of {jobsQuery.data.totalPages}
+              Page {jobsQuery.data.page} of {jobsQuery.data.totalPages}{" "}
+              <span className="text-slate-500">
+                ({jobsQuery.data.total} total)
+              </span>
             </p>
             <div className="flex items-center gap-2">
               <button

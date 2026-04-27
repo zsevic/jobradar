@@ -23,13 +23,23 @@ function toFilterPreset(value: FilterPreset): FilterPreset {
 }
 
 async function parseJson<T>(response: Response): Promise<T> {
+  const text = await response.text();
   if (!response.ok) {
-    const errorBody = (await response.json().catch(() => ({}))) as {
-      message?: string;
-    };
-    throw new Error(errorBody.message ?? "Request failed");
+    let message = "Request failed";
+    if (text.trim()) {
+      try {
+        const errorBody = JSON.parse(text) as { message?: string };
+        message = errorBody.message ?? message;
+      } catch {
+        message = text.slice(0, 200);
+      }
+    }
+    throw new Error(message);
   }
-  return response.json() as Promise<T>;
+  if (!text.trim()) {
+    throw new Error("Empty response body");
+  }
+  return JSON.parse(text) as T;
 }
 
 function getAuthHeaders() {
@@ -79,11 +89,28 @@ export async function fetchPreset(): Promise<FilterPreset | null> {
     headers: getAuthHeaders(),
     cache: "no-store",
   });
+  const text = await response.text();
   if (response.status === 404) {
     return null;
   }
-  const data = await parseJson<FilterPreset | null>(response);
-  if (!data) {
+  if (!response.ok) {
+    let message = "Request failed";
+    if (text.trim()) {
+      try {
+        const errorBody = JSON.parse(text) as { message?: string };
+        message = errorBody.message ?? message;
+      } catch {
+        message = text.slice(0, 200);
+      }
+    }
+    throw new Error(message);
+  }
+  // Nest may omit the body when no preset existed; empty body means "no preset".
+  if (!text.trim()) {
+    return null;
+  }
+  const data = JSON.parse(text) as FilterPreset | null;
+  if (data === null || data === undefined) {
     return null;
   }
   return toFilterPreset(data);
