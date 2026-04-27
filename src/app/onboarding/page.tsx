@@ -4,7 +4,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { fetchPreset, savePreset } from "@/lib/api";
-import { getAllCountryOptions, getCountryNameFromLocale } from "@/lib/countries";
+import {
+  getAllCountryOptions,
+  getCountryNameFromLocale,
+  sortCountriesSelectedFirst,
+} from "@/lib/countries";
 import {
   noStackRoles,
   roleOptions,
@@ -42,13 +46,12 @@ export default function OnboardingPage() {
   const isStackRequired = !noStackRoles.includes(role);
   const availableStackOptions = useMemo(() => stackByRole[role], [role]);
   const countryOptions = useMemo(() => getAllCountryOptions(), []);
-  const filteredCountryOptions = useMemo(
-    () =>
-      countryOptions.filter((country) =>
-        country.name.toLowerCase().includes(countryQuery.toLowerCase()),
-      ),
-    [countryOptions, countryQuery],
-  );
+  const filteredCountryOptions = useMemo(() => {
+    const filtered = countryOptions.filter((country) =>
+      country.name.toLowerCase().includes(countryQuery.toLowerCase()),
+    );
+    return sortCountriesSelectedFirst(filtered, locations);
+  }, [countryOptions, countryQuery, locations]);
   const presetQuery = useQuery({
     queryKey: ["preset", "onboarding"],
     queryFn: fetchPreset,

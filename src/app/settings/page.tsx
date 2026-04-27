@@ -3,9 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { fetchPreset, savePreset } from "@/lib/api";
-import { getAllCountryOptions } from "@/lib/countries";
+import { getAllCountryOptions, sortCountriesSelectedFirst } from "@/lib/countries";
 import {
   noStackRoles,
   roleOptions,
@@ -61,10 +61,13 @@ export default function SettingsPage() {
   const alertsEnabled = preset?.alertsEnabled ?? true;
   const isStackRequired = !noStackRoles.includes(role);
   const availableStackOptions = stackByRole[role];
-  const countryOptions = getAllCountryOptions();
-  const filteredCountryOptions = countryOptions.filter((country) =>
-    country.name.toLowerCase().includes(countryQuery.toLowerCase()),
-  );
+  const countryOptions = useMemo(() => getAllCountryOptions(), []);
+  const filteredCountryOptions = useMemo(() => {
+    const filtered = countryOptions.filter((country) =>
+      country.name.toLowerCase().includes(countryQuery.toLowerCase()),
+    );
+    return sortCountriesSelectedFirst(filtered, locations);
+  }, [countryOptions, countryQuery, locations]);
 
   const saveMutation = useMutation({
     mutationFn: savePreset,

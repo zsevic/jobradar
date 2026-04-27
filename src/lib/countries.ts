@@ -62,6 +62,32 @@ function buildCountriesFromDisplayNames(display: Intl.DisplayNames): CountryOpti
   );
 }
 
+/**
+ * Countries currently in `selectedLocationNames` appear first (same order as in the preset),
+ * then remaining entries sorted A–Z. `"remote"` is ignored; it is not a country row.
+ */
+export function sortCountriesSelectedFirst(
+  filteredCountries: CountryOption[],
+  selectedLocationNames: readonly string[],
+): CountryOption[] {
+  const selectedCodes = new Set<string>();
+  const orderedSelected: CountryOption[] = [];
+
+  for (const loc of selectedLocationNames) {
+    const country = filteredCountries.find((c) => c.name === loc);
+    if (country && !selectedCodes.has(country.code)) {
+      selectedCodes.add(country.code);
+      orderedSelected.push(country);
+    }
+  }
+
+  const rest = filteredCountries
+    .filter((c) => !selectedCodes.has(c.code))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return [...orderedSelected, ...rest];
+}
+
 export function getAllCountryOptions(): CountryOption[] {
   if (cache) {
     return cache;
