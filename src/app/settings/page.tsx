@@ -3,9 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { fetchPreset, savePreset } from "@/lib/api";
-import { getAllCountryOptions, sortCountriesSelectedFirst } from "@/lib/countries";
+import { LocationSelector } from "@/components/location-selector";
 import {
   noStackRoles,
   roleOptions,
@@ -51,7 +51,6 @@ export default function SettingsPage() {
 
   const [draftPreset, setDraftPreset] = useState<FilterPreset | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [countryQuery, setCountryQuery] = useState("");
   const normalizedPreset = presetQuery.data ? normalizePreset(presetQuery.data) : null;
   const preset = draftPreset ?? normalizedPreset;
   const role = preset?.role ?? "backend";
@@ -61,13 +60,6 @@ export default function SettingsPage() {
   const alertsEnabled = preset?.alertsEnabled ?? true;
   const isStackRequired = !noStackRoles.includes(role);
   const availableStackOptions = stackByRole[role];
-  const countryOptions = useMemo(() => getAllCountryOptions(), []);
-  const filteredCountryOptions = useMemo(() => {
-    const filtered = countryOptions.filter((country) =>
-      country.name.toLowerCase().includes(countryQuery.toLowerCase()),
-    );
-    return sortCountriesSelectedFirst(filtered, locations);
-  }, [countryOptions, countryQuery, locations]);
 
   const saveMutation = useMutation({
     mutationFn: savePreset,
@@ -250,45 +242,7 @@ export default function SettingsPage() {
             </select>
           </label>
 
-          <fieldset>
-            <legend className="mb-1 text-sm text-slate-300">Locations</legend>
-            <div className="space-y-3 rounded-lg border border-slate-800 p-3">
-              <button
-                type="button"
-                onClick={() => toggleLocation(REMOTE_LOCATION)}
-                className={`rounded-full border px-3 py-1 text-sm ${
-                  locations.includes(REMOTE_LOCATION)
-                    ? "border-cyan-400 bg-cyan-400/10 text-cyan-200"
-                    : "border-slate-700 text-slate-300"
-                }`}
-              >
-                Remote
-              </button>
-              <input
-                type="text"
-                value={countryQuery}
-                onChange={(event) => setCountryQuery(event.target.value)}
-                placeholder="Search countries..."
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              />
-              <div className="max-h-44 space-y-1 overflow-y-auto rounded-md border border-slate-800 p-2">
-                {filteredCountryOptions.map((country) => (
-                  <label
-                    key={country.code}
-                    className="flex cursor-pointer items-center gap-2 text-sm text-slate-300"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={locations.includes(country.name)}
-                      onChange={() => toggleLocation(country.name)}
-                      className="h-4 w-4 accent-cyan-400"
-                    />
-                    <span>{country.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </fieldset>
+          <LocationSelector locations={locations} onToggle={toggleLocation} />
 
           <label className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/70 px-4 py-3">
             <span className="text-sm text-slate-200">Email alerts enabled</span>
