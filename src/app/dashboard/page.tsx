@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchDashboardJobs, fetchPreset } from "@/lib/api";
 import { noStackRoles } from "@/lib/onboarding-options";
 import type { DashboardJob } from "@/lib/types";
@@ -15,6 +15,9 @@ function formatLocationLabel(location: string): string {
 
 export default function DashboardPage() {
   const [page, setPage] = useState(1);
+  const feedBottomRef = useRef<HTMLDivElement>(null);
+  const [feedBottomVisible, setFeedBottomVisible] = useState(false);
+  const [hasScrolledDown, setHasScrolledDown] = useState(false);
   const limit = 20;
   const presetQuery = useQuery({
     queryKey: ["preset"],
@@ -26,9 +29,34 @@ export default function DashboardPage() {
     queryFn: () => fetchDashboardJobs(page, limit),
   });
 
+  useEffect(() => {
+    const onScroll = () => setHasScrolledDown(window.scrollY > 120);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const node = feedBottomRef.current;
+    if (!node || !jobsQuery.data?.items.length) {
+      setFeedBottomVisible(false);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setFeedBottomVisible(entry.isIntersecting),
+      { root: null, threshold: 0, rootMargin: "0px 0px 64px 0px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [jobsQuery.data?.items.length, jobsQuery.data?.totalPages, page]);
+
+  const showBackToTop =
+    Boolean(jobsQuery.data?.items.length) && feedBottomVisible && hasScrolledDown;
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">
-      <header className="mb-6 flex items-center justify-between">
+      <header id="job-feed-top" className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold">Your job feed</h1>
           <p className="mt-1 text-slate-400">
@@ -150,7 +178,37 @@ export default function DashboardPage() {
               </button>
             </div>
           </div>
+
+          <div ref={feedBottomRef} className="h-px w-full shrink-0" aria-hidden />
         </section>
+      )}
+
+      {showBackToTop && (
+        <button
+          type="button"
+          aria-label="Back to top of job feed"
+          onClick={() => {
+            document.getElementById("job-feed-top")?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+          className="fixed bottom-6 left-1/2 z-50 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-cyan-500/50 bg-slate-900/95 text-cyan-200 shadow-lg backdrop-blur hover:bg-slate-800 hover:text-cyan-100 md:bottom-10"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5"
+            aria-hidden
+          >
+            <path d="M12 19V5M5 12l7-7 7 7" />
+          </svg>
+        </button>
       )}
     </main>
   );
