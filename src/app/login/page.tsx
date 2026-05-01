@@ -3,9 +3,10 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { AuthenticatedEntryRedirect } from "@/components/authenticated-entry-redirect";
 import { fetchPreset, login } from "@/lib/api";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [licenseKey, setLicenseKey] = useState("");
@@ -73,5 +74,13 @@ export default function LoginPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <AuthenticatedEntryRedirect>
+      <LoginForm />
+    </AuthenticatedEntryRedirect>
   );
 }
