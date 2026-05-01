@@ -51,10 +51,14 @@ export default async function Home() {
                       new
                     </span>
                   )}
+                  {job.isRemote && (
+                    <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-xs font-medium text-indigo-200">
+                      remote
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1 text-slate-300">
-                  {job.company} • {job.location}{" "}
-                  {job.isRemote ? "• Remote" : ""}
+                  {job.company} • {job.location}
                 </p>
                 <p className="mt-1 text-sm text-slate-400">
                   {formatPostedAgo(job.postedAt)}
