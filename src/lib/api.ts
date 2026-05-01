@@ -56,6 +56,15 @@ function getAuthHeaders() {
   };
 }
 
+/** Removes stored session tokens (client-only). */
+export function clearAuthSession(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  localStorage.removeItem("jobradar_token");
+  localStorage.removeItem("jobradar_email");
+}
+
 export async function fetchLatestJobs(): Promise<Job[]> {
   const response = await fetch(`${backendBaseUrl}/jobs/latest`, {
     cache: "no-store",

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { LogoutButton } from "@/components/logout-button";
 import { fetchPreset, savePreset } from "@/lib/api";
 import { LocationSelector } from "@/components/location-selector";
 import {
@@ -173,12 +174,15 @@ export default function SettingsPage() {
               Update your job filters and notification preferences.
             </p>
           </div>
-          <Link
-            href="/dashboard"
-            className="rounded-lg border border-cyan-500/60 px-3 py-1.5 text-sm text-cyan-200 hover:bg-cyan-500/10"
-          >
-            Back to dashboard
-          </Link>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <Link
+              href="/dashboard"
+              className="rounded-lg border border-cyan-500/60 px-3 py-1.5 text-sm text-cyan-200 hover:bg-cyan-500/10"
+            >
+              Back to dashboard
+            </Link>
+            <LogoutButton />
+          </div>
         </div>
 
         <form className="mt-6 space-y-5" onSubmit={onSubmit}>

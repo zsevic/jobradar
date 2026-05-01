@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { LogoutButton } from "@/components/logout-button";
 import { useEffect, useRef, useState } from "react";
 import { fetchDashboardJobs, fetchPreset } from "@/lib/api";
 import { noStackRoles } from "@/lib/onboarding-options";
@@ -77,13 +78,14 @@ export default function DashboardPage() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
           <Link
             href="/settings"
             className="rounded-lg border border-cyan-500/60 px-3 py-1.5 text-sm text-cyan-200 hover:bg-cyan-500/10"
           >
             Settings
           </Link>
+          <LogoutButton />
         </div>
       </header>
 

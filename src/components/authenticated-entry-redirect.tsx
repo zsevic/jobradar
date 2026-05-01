@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { fetchPreset } from "@/lib/api";
+import { clearAuthSession, fetchPreset } from "@/lib/api";
 
 /**
  * For public-only routes (e.g. `/`, `/login`). If a session token exists, sends the
@@ -31,8 +31,7 @@ export function AuthenticatedEntryRedirect({
       })
       .catch(() => {
         if (cancelled) return;
-        localStorage.removeItem("jobradar_token");
-        localStorage.removeItem("jobradar_email");
+        clearAuthSession();
         setShowPublic(true);
       });
 
