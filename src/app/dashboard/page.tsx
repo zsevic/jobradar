@@ -60,7 +60,10 @@ export default function DashboardPage() {
     Boolean(jobsQuery.data?.items.length) && feedBottomVisible && hasScrolledDown;
 
   const presetRole = presetQuery.data?.role;
-  const hideStackSeniorityOnJobs = presetRole === "management";
+  const presetHasNoStackFilter =
+    presetRole != null && noStackRoles.includes(presetRole);
+  const hideJobStackOnly =
+    presetRole === "devops" || presetRole === "qa";
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">
@@ -114,7 +117,7 @@ export default function DashboardPage() {
       {jobsQuery.data && jobsQuery.data.items.length === 0 && (
         <div className="card p-5 text-slate-400">
           No jobs match your filters right now. Try widening your{" "}
-          {hideStackSeniorityOnJobs ? "locations" : "locations or stack"} in{" "}
+          {presetHasNoStackFilter ? "locations" : "locations or stack"} in{" "}
           <Link href="/settings" className="text-cyan-300 underline">
             Settings
           </Link>
@@ -145,11 +148,15 @@ export default function DashboardPage() {
               <p className="mt-1 text-sm text-slate-400">
                 {formatPostedAgo(job.postedAt)}
               </p>
-              {!hideStackSeniorityOnJobs && (
+              {presetRole !== "management" && (
                 <p className="mt-2 text-sm text-slate-400">
-                  Stack:{" "}
-                  {job.stack.length > 0 ? job.stack.join(", ") : "—"}
-                  {" · "}
+                  {!hideJobStackOnly && (
+                    <>
+                      Stack:{" "}
+                      {job.stack.length > 0 ? job.stack.join(", ") : "—"}
+                      {" · "}
+                    </>
+                  )}
                   Seniority: {job.seniority ?? "—"}
                 </p>
               )}
