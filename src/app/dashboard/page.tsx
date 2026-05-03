@@ -63,7 +63,7 @@ export default function DashboardPage() {
   const presetHasNoStackFilter =
     presetRole != null && noStackRoles.includes(presetRole);
   const hideJobStackOnly =
-    presetRole === "devops" || presetRole === "qa";
+    presetRole === "devops" || presetRole === "qa" || presetRole === "ai";
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">
