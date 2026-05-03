@@ -5,8 +5,12 @@ import Link from "next/link";
 import { LogoutButton } from "@/components/logout-button";
 import { useEffect, useRef, useState } from "react";
 import { fetchDashboardJobs, fetchPreset } from "@/lib/api";
-import { noStackRoles } from "@/lib/onboarding-options";
-import type { DashboardJob } from "@/lib/types";
+import {
+  noStackRoles,
+  roleLabels,
+  rolesWithoutSeniorityFilter,
+} from "@/lib/onboarding-options";
+import type { DashboardJob, UserRole } from "@/lib/types";
 import { REMOTE_LOCATION } from "@/lib/types";
 import { formatPostedAgo } from "@/lib/utils";
 
@@ -55,6 +59,9 @@ export default function DashboardPage() {
   const showBackToTop =
     Boolean(jobsQuery.data?.items.length) && feedBottomVisible && hasScrolledDown;
 
+  const presetRole = presetQuery.data?.role;
+  const hideStackSeniorityOnJobs = presetRole === "management";
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">
       <header id="job-feed-top" className="mb-6 flex items-center justify-between">
@@ -66,13 +73,18 @@ export default function DashboardPage() {
           {presetQuery.data && (
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               <span className="font-medium text-slate-300">Active filters:</span>{" "}
-              {presetQuery.data.role}
+              {roleLabels[presetQuery.data.role as UserRole] ??
+                presetQuery.data.role}
               {!noStackRoles.includes(presetQuery.data.role) &&
                 presetQuery.data.stack.length > 0 && (
                   <> · {presetQuery.data.stack.join(", ")}</>
                 )}
-              {" · "}
-              {presetQuery.data.seniority}
+              {!rolesWithoutSeniorityFilter.includes(presetQuery.data.role) && (
+                <>
+                  {" · "}
+                  {presetQuery.data.seniority}
+                </>
+              )}
               {" · "}
               {presetQuery.data.locations.map(formatLocationLabel).join(" · ")}
             </p>
@@ -101,8 +113,8 @@ export default function DashboardPage() {
 
       {jobsQuery.data && jobsQuery.data.items.length === 0 && (
         <div className="card p-5 text-slate-400">
-          No jobs match your filters right now. Try widening your locations or stack
-          in{" "}
+          No jobs match your filters right now. Try widening your{" "}
+          {hideStackSeniorityOnJobs ? "locations" : "locations or stack"} in{" "}
           <Link href="/settings" className="text-cyan-300 underline">
             Settings
           </Link>
@@ -133,12 +145,14 @@ export default function DashboardPage() {
               <p className="mt-1 text-sm text-slate-400">
                 {formatPostedAgo(job.postedAt)}
               </p>
-              <p className="mt-2 text-sm text-slate-400">
-                Stack:{" "}
-                {job.stack.length > 0 ? job.stack.join(", ") : "—"}
-                {" · "}
-                Seniority: {job.seniority ?? "—"}
-              </p>
+              {!hideStackSeniorityOnJobs && (
+                <p className="mt-2 text-sm text-slate-400">
+                  Stack:{" "}
+                  {job.stack.length > 0 ? job.stack.join(", ") : "—"}
+                  {" · "}
+                  Seniority: {job.seniority ?? "—"}
+                </p>
+              )}
               {job.url && (
                 <a
                   href={job.url}

@@ -7,10 +7,29 @@ export const roleOptions: UserRole[] = [
   "mobile",
   "devops",
   "qa",
+  "management",
 ];
 
+/** Human-readable labels for selects and dashboard. */
+export const roleLabels: Record<UserRole, string> = {
+  backend: "Backend",
+  frontend: "Frontend",
+  fullstack: "Full-stack",
+  mobile: "Mobile",
+  devops: "DevOps",
+  qa: "QA",
+  management: "Management",
+};
+
 export const seniorityOptions: Seniority[] = ["junior", "mid", "senior", "staff"];
-export const noStackRoles: UserRole[] = ["devops", "qa"];
+
+/** Roles where seniority is not user-configurable (fixed for job matching). */
+export const rolesWithoutSeniorityFilter: UserRole[] = ["management"];
+
+/** Seniority stored for management presets (backend + UI default). */
+export const managementDefaultSeniority: Seniority = "staff";
+
+export const noStackRoles: UserRole[] = ["devops", "qa", "management"];
 
 export const stackByRole: Record<UserRole, StackOption[]> = {
   backend: ["node.js", "python", "golang", "java", ".net", "php"],
@@ -32,4 +51,5 @@ export const stackByRole: Record<UserRole, StackOption[]> = {
   mobile: ["react native", "swift", "kotlin", "flutter", "dart"],
   devops: [],
   qa: [],
+  management: [],
 };

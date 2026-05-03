@@ -7,8 +7,11 @@ import { fetchPreset, savePreset } from "@/lib/api";
 import { LocationSelector } from "@/components/location-selector";
 import { getAllCountryOptions, getCountryNameFromLocale } from "@/lib/countries";
 import {
+  managementDefaultSeniority,
   noStackRoles,
+  roleLabels,
   roleOptions,
+  rolesWithoutSeniorityFilter,
   seniorityOptions,
   stackByRole,
 } from "@/lib/onboarding-options";
@@ -40,6 +43,7 @@ export default function OnboardingPage() {
       : [REMOTE_LOCATION],
   );
   const isStackRequired = !noStackRoles.includes(role);
+  const isSeniorityConfigurable = !rolesWithoutSeniorityFilter.includes(role);
   const availableStackOptions = useMemo(() => stackByRole[role], [role]);
   const presetQuery = useQuery({
     queryKey: ["preset", "onboarding"],
@@ -78,6 +82,9 @@ export default function OnboardingPage() {
 
   function onRoleChange(nextRole: UserRole) {
     setRole(nextRole);
+    if (rolesWithoutSeniorityFilter.includes(nextRole)) {
+      setSeniority(managementDefaultSeniority);
+    }
     const nextOptions = stackByRole[nextRole];
     if (noStackRoles.includes(nextRole)) {
       setStack([]);
@@ -101,7 +108,9 @@ export default function OnboardingPage() {
     saveMutation.mutate({
       role,
       stack,
-      seniority,
+      seniority: rolesWithoutSeniorityFilter.includes(role)
+        ? managementDefaultSeniority
+        : seniority,
       locations,
       alertsEnabled: true,
     });
@@ -133,7 +142,7 @@ export default function OnboardingPage() {
             >
               {roleOptions.map((option) => (
                 <option key={option} value={option}>
-                  {option}
+                  {roleLabels[option]}
                 </option>
               ))}
             </select>
@@ -161,22 +170,24 @@ export default function OnboardingPage() {
             </fieldset>
           )}
 
-          <label className="block">
-            <span className="mb-1 block text-sm text-slate-300">Seniority</span>
-            <select
-              value={seniority}
-              onChange={(event) =>
-                setSeniority(event.target.value as Seniority)
-              }
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
-            >
-              {seniorityOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
+          {isSeniorityConfigurable && (
+            <label className="block">
+              <span className="mb-1 block text-sm text-slate-300">Seniority</span>
+              <select
+                value={seniority}
+                onChange={(event) =>
+                  setSeniority(event.target.value as Seniority)
+                }
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+              >
+                {seniorityOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <LocationSelector locations={locations} onToggle={toggleLocation} />
 

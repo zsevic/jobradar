@@ -4,7 +4,8 @@ export type UserRole =
   | "fullstack"
   | "mobile"
   | "devops"
-  | "qa";
+  | "qa"
+  | "management";
 
 export type StackOption =
   | "node.js"

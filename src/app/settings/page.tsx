@@ -8,8 +8,11 @@ import { LogoutButton } from "@/components/logout-button";
 import { fetchPreset, savePreset } from "@/lib/api";
 import { LocationSelector } from "@/components/location-selector";
 import {
+  managementDefaultSeniority,
   noStackRoles,
+  roleLabels,
   roleOptions,
+  rolesWithoutSeniorityFilter,
   seniorityOptions,
   stackByRole,
 } from "@/lib/onboarding-options";
@@ -23,15 +26,24 @@ import {
 } from "@/lib/types";
 
 function normalizePreset(preset: FilterPreset): FilterPreset {
-  if (noStackRoles.includes(preset.role)) {
-    return { ...preset, stack: [] };
+  const withStack = noStackRoles.includes(preset.role)
+    ? { ...preset, stack: [] as StackOption[] }
+    : (() => {
+        const allowedStack = stackByRole[preset.role];
+        const filteredStack = preset.stack.filter((entry) =>
+          allowedStack.includes(entry),
+        );
+        return {
+          ...preset,
+          stack:
+            filteredStack.length > 0 ? filteredStack : [allowedStack[0]],
+        };
+      })();
+
+  if (rolesWithoutSeniorityFilter.includes(withStack.role)) {
+    return { ...withStack, seniority: managementDefaultSeniority };
   }
-  const allowedStack = stackByRole[preset.role];
-  const filteredStack = preset.stack.filter((entry) => allowedStack.includes(entry));
-  return {
-    ...preset,
-    stack: filteredStack.length > 0 ? filteredStack : [allowedStack[0]],
-  };
+  return withStack;
 }
 
 export default function SettingsPage() {
@@ -59,6 +71,7 @@ export default function SettingsPage() {
   const seniority = preset?.seniority ?? "mid";
   const locations = preset?.locations ?? [REMOTE_LOCATION];
   const alertsEnabled = preset?.alertsEnabled ?? true;
+  const isSeniorityConfigurable = !rolesWithoutSeniorityFilter.includes(role);
   const isStackRequired = !noStackRoles.includes(role);
   const availableStackOptions = stackByRole[role];
 
@@ -104,6 +117,14 @@ export default function SettingsPage() {
       }
       const nextOptions = stackByRole[nextRole];
       if (noStackRoles.includes(nextRole)) {
+        if (rolesWithoutSeniorityFilter.includes(nextRole)) {
+          return {
+            ...base,
+            role: nextRole,
+            stack: [],
+            seniority: managementDefaultSeniority,
+          };
+        }
         return { ...base, role: nextRole, stack: [] };
       }
       const filtered = base.stack.filter((entry) => nextOptions.includes(entry));
@@ -130,7 +151,12 @@ export default function SettingsPage() {
       setFormError("Unable to save settings. Please reload the page.");
       return;
     }
-    saveMutation.mutate(preset);
+    saveMutation.mutate({
+      ...preset,
+      seniority: rolesWithoutSeniorityFilter.includes(preset.role)
+        ? managementDefaultSeniority
+        : preset.seniority,
+    });
   }
 
   if (presetQuery.isLoading) {
@@ -195,7 +221,7 @@ export default function SettingsPage() {
             >
               {roleOptions.map((option) => (
                 <option key={option} value={option}>
-                  {option}
+                  {roleLabels[option]}
                 </option>
               ))}
             </select>
@@ -223,28 +249,30 @@ export default function SettingsPage() {
             </fieldset>
           )}
 
-          <label className="block">
-            <span className="mb-1 block text-sm text-slate-300">Seniority</span>
-            <select
-              value={seniority}
-              onChange={(event) =>
-                setDraftPreset((current) => {
-                  const base = current ?? normalizedPreset;
-                  if (!base) {
-                    return current;
-                  }
-                  return { ...base, seniority: event.target.value as Seniority };
-                })
-              }
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
-            >
-              {seniorityOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
+          {isSeniorityConfigurable && (
+            <label className="block">
+              <span className="mb-1 block text-sm text-slate-300">Seniority</span>
+              <select
+                value={seniority}
+                onChange={(event) =>
+                  setDraftPreset((current) => {
+                    const base = current ?? normalizedPreset;
+                    if (!base) {
+                      return current;
+                    }
+                    return { ...base, seniority: event.target.value as Seniority };
+                  })
+                }
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+              >
+                {seniorityOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <LocationSelector locations={locations} onToggle={toggleLocation} />
 
