@@ -25,7 +25,13 @@ export const roleLabels: Record<UserRole, string> = {
   ai: "AI / ML",
 };
 
-export const seniorityOptions: Seniority[] = ["junior", "mid", "senior", "staff"];
+export const seniorityOptions: Seniority[] = [
+  "intern",
+  "junior",
+  "mid",
+  "senior",
+  "staff",
+];
 
 /** Roles where seniority is not user-configurable (fixed for job matching). */
 export const rolesWithoutSeniorityFilter: UserRole[] = ["management"];

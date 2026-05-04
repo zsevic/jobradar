@@ -28,7 +28,7 @@ export type StackOption =
   | "flutter"
   | "dart";
 
-export type Seniority = "junior" | "mid" | "senior" | "staff";
+export type Seniority = "intern" | "junior" | "mid" | "senior" | "staff";
 
 export type LocationOption = string;
 export const REMOTE_LOCATION = "remote";
