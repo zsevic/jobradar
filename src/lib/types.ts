@@ -85,3 +85,8 @@ export interface LoginResponse {
     email: string;
   };
 }
+
+export interface LatestJobsPreviewResponse {
+  items: Job[];
+  total: number;
+}

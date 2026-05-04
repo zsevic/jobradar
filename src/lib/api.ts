@@ -2,6 +2,7 @@ import {
   DashboardJobsPage,
   FilterPreset,
   Job,
+  LatestJobsPreviewResponse,
   LoginPayload,
   LoginResponse,
 } from "@/lib/types";
@@ -65,11 +66,11 @@ export function clearAuthSession(): void {
   localStorage.removeItem("jobradar_email");
 }
 
-export async function fetchLatestJobs(): Promise<Job[]> {
+export async function fetchLatestJobs(): Promise<LatestJobsPreviewResponse> {
   const response = await fetch(`${backendBaseUrl}/jobs/latest`, {
     cache: "no-store",
   });
-  return parseJson<Job[]>(response);
+  return parseJson<LatestJobsPreviewResponse>(response);
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {

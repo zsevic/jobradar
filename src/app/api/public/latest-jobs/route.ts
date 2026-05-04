@@ -5,5 +5,8 @@ export async function GET() {
   const latest = [...mockJobs]
     .sort((a, b) => +new Date(b.postedAt) - +new Date(a.postedAt))
     .slice(0, 5);
-  return NextResponse.json(latest);
+  return NextResponse.json({
+    items: latest,
+    total: mockJobs.length,
+  });
 }

@@ -5,11 +5,12 @@ import { mockJobs } from "@/lib/mock-data";
 import { formatPostedAgo } from "@/lib/utils";
 
 export default async function Home() {
-  const latestJobs = await fetchLatestJobs().catch(() =>
-    [...mockJobs]
+  const latestJobs = await fetchLatestJobs().catch(() => ({
+    items: [...mockJobs]
       .sort((a, b) => +new Date(b.postedAt) - +new Date(a.postedAt))
       .slice(0, 5),
-  );
+    total: mockJobs.length,
+  }));
 
   return (
     <AuthenticatedEntryRedirect>
@@ -36,10 +37,12 @@ export default async function Home() {
         <section className="mt-8 card p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold">Latest Jobs</h2>
-            <span className="text-sm text-slate-400">Public preview</span>
+            <span className="text-sm text-slate-400">
+              Public preview - {latestJobs.total.toLocaleString()} total jobs
+            </span>
           </div>
           <div className="space-y-3">
-            {latestJobs.map((job) => (
+            {latestJobs.items.map((job) => (
               <article
                 key={job.id}
                 className="rounded-xl border border-slate-800 bg-slate-950/50 p-4"
