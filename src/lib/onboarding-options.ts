@@ -12,6 +12,7 @@ export const roleOptions: UserRole[] = [
   "ai",
   "solutions",
   "recruiter",
+  "security",
 ];
 
 /** Human-readable labels for selects and dashboard. */
@@ -27,6 +28,7 @@ export const roleLabels: Record<UserRole, string> = {
   ai: "AI / ML",
   solutions: "Solutions / Pre-sales",
   recruiter: "Recruiter / Talent",
+  security: "Security",
 };
 
 export const seniorityOptions: Seniority[] = [
@@ -50,6 +52,7 @@ export const noStackRoles: UserRole[] = [
   "ai",
   "solutions",
   "recruiter",
+  "security",
 ];
 
 export const stackByRole: Record<UserRole, StackOption[]> = {
@@ -92,4 +95,5 @@ export const stackByRole: Record<UserRole, StackOption[]> = {
   ai: [],
   solutions: [],
   recruiter: [],
+  security: [],
 };

@@ -9,7 +9,8 @@ export type UserRole =
   | "engineer"
   | "ai"
   | "solutions"
-  | "recruiter";
+  | "recruiter"
+  | "security";
 
 export type StackOption =
   | "node.js"
