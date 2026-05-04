@@ -30,8 +30,18 @@ function LoginForm() {
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-12">
       <div className="card p-6">
         <h1 className="text-2xl font-semibold">Login to JobRadar</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Use your email and Gumroad license key.
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          Once you subscribe on the{" "}
+          <a
+            href="https://sparxno.gumroad.com/l/jobradar"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-cyan-300 underline decoration-cyan-500/50 underline-offset-2 hover:text-cyan-200"
+          >
+            Gumroad product page
+          </a>
+          , you&apos;ll get a license key to use for login below with the email from
+          your purchase.
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
