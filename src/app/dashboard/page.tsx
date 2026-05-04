@@ -1,16 +1,21 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { LogoutButton } from "@/components/logout-button";
-import { useEffect, useRef, useState } from "react";
-import { fetchDashboardJobs, fetchPreset } from "@/lib/api";
 import {
+  FilterEditor,
+  normalizePreset,
+  presetsEqual,
+} from "@/components/filter-editor";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { fetchDashboardJobs, fetchPreset, savePreset } from "@/lib/api";
+import {
+  managementDefaultSeniority,
   noStackRoles,
   roleLabels,
   rolesWithoutSeniorityFilter,
 } from "@/lib/onboarding-options";
-import type { DashboardJob, UserRole } from "@/lib/types";
+import type { DashboardJob, FilterPreset, UserRole } from "@/lib/types";
 import { REMOTE_LOCATION } from "@/lib/types";
 import { formatPostedAgo } from "@/lib/utils";
 
@@ -19,19 +24,56 @@ function formatLocationLabel(location: string): string {
 }
 
 export default function DashboardPage() {
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const feedBottomRef = useRef<HTMLDivElement>(null);
   const [feedBottomVisible, setFeedBottomVisible] = useState(false);
   const [hasScrolledDown, setHasScrolledDown] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [draft, setDraft] = useState<FilterPreset | null>(null);
+  const [appliedOverride, setAppliedOverride] = useState<FilterPreset | null>(
+    null,
+  );
+  const [formError, setFormError] = useState<string | null>(null);
   const limit = 20;
+
   const presetQuery = useQuery({
     queryKey: ["preset"],
     queryFn: fetchPreset,
     retry: false,
   });
+
+  const savedPresetFingerprint = presetQuery.data
+    ? JSON.stringify(presetQuery.data)
+    : "";
+
+  const savedPreset = useMemo(() => {
+    if (!presetQuery.data) {
+      return null;
+    }
+    return normalizePreset(presetQuery.data);
+  }, [savedPresetFingerprint]);
+
+  useEffect(() => {
+    setDraft(savedPreset);
+    setAppliedOverride(null);
+  }, [savedPreset]);
+
+  const jobFilters = appliedOverride ?? savedPreset ?? undefined;
+  const jobFiltersKey = jobFilters ? JSON.stringify(jobFilters) : "";
+
   const jobsQuery = useQuery({
-    queryKey: ["dashboard-jobs", page, limit],
-    queryFn: () => fetchDashboardJobs(page, limit),
+    queryKey: ["dashboard-jobs", page, limit, jobFiltersKey],
+    queryFn: () => fetchDashboardJobs(page, limit, jobFilters ?? null),
+    enabled: presetQuery.isSuccess,
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: savePreset,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["preset"] });
+      window.alert("Settings updated successfully.");
+    },
   });
 
   useEffect(() => {
@@ -59,7 +101,8 @@ export default function DashboardPage() {
   const showBackToTop =
     Boolean(jobsQuery.data?.items.length) && feedBottomVisible && hasScrolledDown;
 
-  const presetRole = presetQuery.data?.role;
+  const displayPreset = jobFilters;
+  const presetRole = displayPreset?.role;
   const presetHasNoStackFilter =
     presetRole != null && noStackRoles.includes(presetRole);
   const hideJobStackOnly =
@@ -70,6 +113,77 @@ export default function DashboardPage() {
     presetRole === "recruiter" ||
     presetRole === "security";
 
+  const isPreviewing =
+    savedPreset != null &&
+    appliedOverride != null &&
+    !presetsEqual(appliedOverride, savedPreset);
+
+  const hasUnsavedDraft =
+    draft != null &&
+    savedPreset != null &&
+    !presetsEqual(draft, savedPreset);
+
+  function validateDraftForApply(value: FilterPreset): string | null {
+    const stackRequired = !noStackRoles.includes(value.role);
+    if (stackRequired && value.stack.length === 0) {
+      return "Please select at least one stack option.";
+    }
+    if (value.locations.length === 0) {
+      return "Please select at least one location.";
+    }
+    return null;
+  }
+
+  function onApplyFilters() {
+    setFormError(null);
+    if (!draft) {
+      return;
+    }
+    const err = validateDraftForApply(draft);
+    if (err) {
+      setFormError(err);
+      return;
+    }
+    setAppliedOverride(normalizePreset(draft));
+    setPage(1);
+  }
+
+  function onResetFilters() {
+    setFormError(null);
+    setDraft(savedPreset);
+    setAppliedOverride(null);
+    setPage(1);
+  }
+
+  function onSaveToSettings() {
+    setFormError(null);
+    if (!draft) {
+      setFormError("Nothing to save.");
+      return;
+    }
+    const err = validateDraftForApply(draft);
+    if (err) {
+      setFormError(err);
+      return;
+    }
+    saveMutation.mutate({
+      ...draft,
+      seniority: rolesWithoutSeniorityFilter.includes(draft.role)
+        ? managementDefaultSeniority
+        : draft.seniority,
+    });
+  }
+
+  const normalizedDraft = draft ? normalizePreset(draft) : null;
+  const applyDisabled =
+    normalizedDraft == null ||
+    (jobFilters != null && presetsEqual(normalizedDraft, jobFilters));
+
+  const saveDisabled =
+    draft == null ||
+    savedPreset == null ||
+    presetsEqual(normalizePreset(draft), savedPreset);
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">
       <header id="job-feed-top" className="mb-6 flex items-center justify-between">
@@ -78,36 +192,95 @@ export default function DashboardPage() {
           <p className="mt-1 text-slate-400">
             Fresh jobs matched to your filters.
           </p>
-          {presetQuery.data && (
+          {displayPreset && (
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               <span className="font-medium text-slate-300">Active filters:</span>{" "}
-              {roleLabels[presetQuery.data.role as UserRole] ??
-                presetQuery.data.role}
-              {!noStackRoles.includes(presetQuery.data.role) &&
-                presetQuery.data.stack.length > 0 && (
-                  <> · {presetQuery.data.stack.join(", ")}</>
+              {isPreviewing && (
+                <span className="mr-1 text-amber-200/90">(preview)</span>
+              )}
+              {roleLabels[displayPreset.role as UserRole] ?? displayPreset.role}
+              {!noStackRoles.includes(displayPreset.role) &&
+                displayPreset.stack.length > 0 && (
+                  <> · {displayPreset.stack.join(", ")}</>
                 )}
-              {!rolesWithoutSeniorityFilter.includes(presetQuery.data.role) && (
+              {!rolesWithoutSeniorityFilter.includes(displayPreset.role) && (
                 <>
                   {" · "}
-                  {presetQuery.data.seniority}
+                  {displayPreset.seniority}
                 </>
               )}
               {" · "}
-              {presetQuery.data.locations.map(formatLocationLabel).join(" · ")}
+              {displayPreset.locations.map(formatLocationLabel).join(" · ")}
             </p>
           )}
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
+          {savedPreset && draft && (
+            <button
+              type="button"
+              onClick={() => setEditorOpen((open) => !open)}
+              className="inline-flex flex-wrap items-center gap-2 rounded-lg border border-cyan-500/60 px-3 py-1.5 text-sm text-cyan-200 hover:bg-cyan-500/10"
+            >
+              <span>{editorOpen ? "Hide filters" : "Edit filters"}</span>
+              {(hasUnsavedDraft || isPreviewing) && (
+                <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-200">
+                  Unsaved / preview
+                </span>
+              )}
+            </button>
+          )}
           <Link
             href="/settings"
             className="rounded-lg border border-cyan-500/60 px-3 py-1.5 text-sm text-cyan-200 hover:bg-cyan-500/10"
           >
             Settings
           </Link>
-          <LogoutButton />
         </div>
       </header>
+
+      {savedPreset && draft && editorOpen && (
+        <section className="mb-6 card p-4">
+          <div className="space-y-4">
+            <FilterEditor value={draft} onChange={setDraft} />
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={onApplyFilters}
+                disabled={applyDisabled}
+                className="rounded-lg bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
+              >
+                Apply
+              </button>
+              <button
+                type="button"
+                onClick={onSaveToSettings}
+                disabled={saveDisabled || saveMutation.isPending}
+                className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+              >
+                {saveMutation.isPending ? "Saving…" : "Save to settings"}
+              </button>
+              <button
+                type="button"
+                onClick={onResetFilters}
+                disabled={
+                  savedPreset != null &&
+                  presetsEqual(draft, savedPreset) &&
+                  appliedOverride == null
+                }
+                className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+              >
+                Reset
+              </button>
+            </div>
+            {formError && <p className="text-sm text-red-300">{formError}</p>}
+            {saveMutation.error && (
+              <p className="text-sm text-red-300">
+                {(saveMutation.error as Error).message}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
 
       {jobsQuery.isLoading && (
         <div className="card p-5 text-slate-300">Loading jobs...</div>
@@ -126,6 +299,19 @@ export default function DashboardPage() {
           <Link href="/settings" className="text-cyan-300 underline">
             Settings
           </Link>
+          {savedPreset && (
+            <>
+              {" "}
+              or{" "}
+              <button
+                type="button"
+                onClick={() => setEditorOpen(true)}
+                className="text-cyan-300 underline"
+              >
+                edit filters here
+              </button>
+            </>
+          )}
           .
         </div>
       )}
@@ -197,7 +383,9 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() =>
-                  setPage((current) => Math.min(current + 1, jobsQuery.data.totalPages))
+                  setPage((current) =>
+                    Math.min(current + 1, jobsQuery.data.totalPages),
+                  )
                 }
                 disabled={page >= jobsQuery.data.totalPages}
                 className="rounded-md border border-slate-700 px-3 py-1.5 text-sm text-slate-200 disabled:opacity-50"

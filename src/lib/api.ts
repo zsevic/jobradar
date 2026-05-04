@@ -93,6 +93,18 @@ export async function savePreset(payload: FilterPreset): Promise<FilterPreset> {
   return toFilterPreset(data);
 }
 
+export async function updateAlertsEnabled(
+  alertsEnabled: boolean,
+): Promise<FilterPreset> {
+  const response = await fetch(`${backendBaseUrl}/onboarding/alerts`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ alertsEnabled }),
+  });
+  const data = await parseJson<FilterPreset>(response);
+  return toFilterPreset(data);
+}
+
 export async function fetchPreset(): Promise<FilterPreset | null> {
   const response = await fetch(`${backendBaseUrl}/onboarding/preset`, {
     method: "GET",
@@ -129,11 +141,23 @@ export async function fetchPreset(): Promise<FilterPreset | null> {
 export async function fetchDashboardJobs(
   page = 1,
   limit = 20,
+  filters?: FilterPreset | null,
 ): Promise<DashboardJobsPage> {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
   });
+  if (filters) {
+    params.set("role", filters.role);
+    for (const stack of filters.stack) {
+      params.append("stack", stack);
+    }
+    params.set("seniority", filters.seniority);
+    for (const loc of filters.locations) {
+      params.append("location", loc);
+    }
+    params.set("alertsEnabled", String(filters.alertsEnabled));
+  }
   const response = await fetch(`${backendBaseUrl}/jobs?${params.toString()}`, {
     headers: getAuthHeaders(),
     cache: "no-store",
