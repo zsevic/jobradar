@@ -109,6 +109,7 @@ export default function DashboardPage() {
     presetRole === "devops" ||
     presetRole === "qa" ||
     presetRole === "ai" ||
+    presetRole === "data" ||
     presetRole === "solutions" ||
     presetRole === "recruiter" ||
     presetRole === "security";

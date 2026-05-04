@@ -8,6 +8,7 @@ export type UserRole =
   | "management"
   | "engineer"
   | "ai"
+  | "data"
   | "solutions"
   | "recruiter"
   | "security";
