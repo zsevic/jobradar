@@ -15,6 +15,7 @@ export type StackOption =
   | "node.js"
   | "python"
   | "golang"
+  | "rust"
   | "java"
   | ".net"
   | "php"
