@@ -7,7 +7,9 @@ export type UserRole =
   | "qa"
   | "management"
   | "engineer"
-  | "ai";
+  | "ai"
+  | "solutions"
+  | "recruiter";
 
 export type StackOption =
   | "node.js"
