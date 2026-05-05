@@ -8,5 +8,6 @@ export async function GET() {
   return NextResponse.json({
     items: latest,
     total: mockJobs.length,
+    country: null,
   });
 }

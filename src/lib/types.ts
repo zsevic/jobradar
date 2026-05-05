@@ -90,4 +90,6 @@ export interface LoginResponse {
 export interface LatestJobsPreviewResponse {
   items: Job[];
   total: number;
+  /** Normalized country token used for filtering, or null when not filtered. */
+  country: string | null;
 }

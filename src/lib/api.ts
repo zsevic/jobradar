@@ -66,8 +66,50 @@ export function clearAuthSession(): void {
   localStorage.removeItem("jobradar_email");
 }
 
-export async function fetchLatestJobs(): Promise<LatestJobsPreviewResponse> {
-  const response = await fetch(`${backendBaseUrl}/jobs/latest`, {
+const VISITOR_COUNTRY_SESSION_KEY = "jobradar_country";
+
+/**
+ * Two-letter ISO country from ipapi.co, cached in sessionStorage for the tab.
+ * Returns null when unavailable (blocked, failed, or already cached miss).
+ */
+export async function getVisitorCountry(): Promise<string | null> {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const cached = sessionStorage.getItem(VISITOR_COUNTRY_SESSION_KEY);
+  if (cached !== null) {
+    return cached === "" ? null : cached;
+  }
+  try {
+    const response = await fetch("https://ipapi.co/country/", {
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      sessionStorage.setItem(VISITOR_COUNTRY_SESSION_KEY, "");
+      return null;
+    }
+    const text = (await response.text()).trim();
+    if (!text || text.length !== 2) {
+      sessionStorage.setItem(VISITOR_COUNTRY_SESSION_KEY, "");
+      return null;
+    }
+    const code = text.toUpperCase();
+    sessionStorage.setItem(VISITOR_COUNTRY_SESSION_KEY, code);
+    return code;
+  } catch {
+    sessionStorage.setItem(VISITOR_COUNTRY_SESSION_KEY, "");
+    return null;
+  }
+}
+
+export async function fetchLatestJobs(
+  country?: string | null,
+): Promise<LatestJobsPreviewResponse> {
+  const qs =
+    country && country.trim()
+      ? `?country=${encodeURIComponent(country.trim())}`
+      : "";
+  const response = await fetch(`${backendBaseUrl}/jobs/latest${qs}`, {
     cache: "no-store",
   });
   return parseJson<LatestJobsPreviewResponse>(response);

@@ -1,17 +1,8 @@
 import Link from "next/link";
 import { AuthenticatedEntryRedirect } from "@/components/authenticated-entry-redirect";
-import { fetchLatestJobs } from "@/lib/api";
-import { mockJobs } from "@/lib/mock-data";
-import { formatPostedAgo } from "@/lib/utils";
+import { LatestJobsSection } from "@/components/latest-jobs-section";
 
-export default async function Home() {
-  const latestJobs = await fetchLatestJobs().catch(() => ({
-    items: [...mockJobs]
-      .sort((a, b) => +new Date(b.postedAt) - +new Date(a.postedAt))
-      .slice(0, 5),
-    total: mockJobs.length,
-  }));
-
+export default function Home() {
   return (
     <AuthenticatedEntryRedirect>
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">
@@ -34,42 +25,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="mt-8 card p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Latest Jobs</h2>
-            <span className="text-sm text-slate-400">
-              Public preview - {latestJobs.total.toLocaleString()} total jobs
-            </span>
-          </div>
-          <div className="space-y-3">
-            {latestJobs.items.map((job) => (
-              <article
-                key={job.id}
-                className="rounded-xl border border-slate-800 bg-slate-950/50 p-4"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-semibold">{job.title}</h3>
-                  {job.isNew && (
-                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-300">
-                      new
-                    </span>
-                  )}
-                  {job.isRemote && (
-                    <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-xs font-medium text-indigo-200">
-                      remote
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 text-slate-300">
-                  {job.company} • {job.location}
-                </p>
-                <p className="mt-1 text-sm text-slate-400">
-                  {formatPostedAgo(job.postedAt)}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
+        <LatestJobsSection />
       </main>
     </AuthenticatedEntryRedirect>
   );
