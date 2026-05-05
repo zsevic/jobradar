@@ -25,7 +25,7 @@ export const roleLabels: Record<UserRole, string> = {
   devops: "DevOps",
   qa: "QA",
   management: "Management",
-  engineer: "Engineer",
+  engineer: "Software Engineer / Developer",
   ai: "AI / ML",
   data: "Data / Analytics Engineering",
   solutions: "Solutions / Pre-sales",
