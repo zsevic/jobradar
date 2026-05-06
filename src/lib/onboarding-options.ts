@@ -27,7 +27,7 @@ export const roleLabels: Record<UserRole, string> = {
   management: "Management",
   engineer: "Software Engineer / Developer",
   ai: "AI / ML",
-  data: "Data / Analytics Engineering",
+  data: "Data / Analytics",
   solutions: "Solutions / Pre-sales",
   recruiter: "Recruiter / Talent",
   security: "Security",
