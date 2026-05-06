@@ -10,6 +10,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchDashboardJobs, fetchPreset, savePreset } from "@/lib/api";
 import {
+  formatJobSeniorities,
   managementDefaultSeniority,
   noStackRoles,
   roleLabels,
@@ -349,7 +350,7 @@ export default function DashboardPage() {
                       {" · "}
                     </>
                   )}
-                  Seniority: {job.seniority ?? "—"}
+                  Seniority: {formatJobSeniorities(job.seniorities)}
                 </p>
               )}
               {job.url && (

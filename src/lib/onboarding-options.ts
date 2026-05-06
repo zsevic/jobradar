@@ -41,6 +41,27 @@ export const seniorityOptions: Seniority[] = [
   "staff",
 ];
 
+export const seniorityLabels: Record<Seniority, string> = {
+  intern: "Intern",
+  junior: "Junior",
+  mid: "Mid",
+  senior: "Senior",
+  staff: "Staff",
+};
+
+/** Display for job rows: one label, or "Min – Max" for banded titles. */
+export function formatJobSeniorities(levels: Seniority[]): string {
+  if (levels.length === 0) {
+    return "—";
+  }
+  if (levels.length === 1) {
+    return seniorityLabels[levels[0]];
+  }
+  return `${seniorityLabels[levels[0]]} – ${
+    seniorityLabels[levels[levels.length - 1]]
+  }`;
+}
+
 /** Roles where seniority is not user-configurable (fixed for job matching). */
 export const rolesWithoutSeniorityFilter: UserRole[] = ["management"];
 

@@ -10,7 +10,7 @@ export const mockJobs: Job[] = [
     postedAt: new Date(Date.now() - 1000 * 60 * 40).toISOString(),
     isNew: true,
     stack: ["node.js"],
-    seniority: "senior",
+    seniorities: ["senior"],
   },
   {
     id: "ashby-notion-frontend",
@@ -21,7 +21,7 @@ export const mockJobs: Job[] = [
     postedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     isNew: true,
     stack: ["node.js"],
-    seniority: "mid",
+    seniorities: ["mid"],
   },
   {
     id: "gh-vercel-devops",
@@ -32,7 +32,7 @@ export const mockJobs: Job[] = [
     postedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
     isNew: false,
     stack: ["golang"],
-    seniority: "senior",
+    seniorities: ["senior"],
   },
   {
     id: "ashby-linear-backend",
@@ -43,7 +43,7 @@ export const mockJobs: Job[] = [
     postedAt: new Date(Date.now() - 1000 * 60 * 60 * 7).toISOString(),
     isNew: false,
     stack: ["node.js", "python"],
-    seniority: "mid",
+    seniorities: ["mid"],
   },
   {
     id: "gh-github-qa",
@@ -54,7 +54,7 @@ export const mockJobs: Job[] = [
     postedAt: new Date(Date.now() - 1000 * 60 * 60 * 10).toISOString(),
     isNew: false,
     stack: ["python"],
-    seniority: "mid",
+    seniorities: ["mid"],
   },
   {
     id: "ashby-ramp-fullstack",
@@ -65,6 +65,6 @@ export const mockJobs: Job[] = [
     postedAt: new Date(Date.now() - 1000 * 60 * 60 * 14).toISOString(),
     isNew: false,
     stack: ["node.js"],
-    seniority: "staff",
+    seniorities: ["staff"],
   },
 ];

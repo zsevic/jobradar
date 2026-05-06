@@ -48,14 +48,15 @@ export interface Job {
   isNew: boolean;
   url?: string;
   stack?: string[];
-  seniority?: Seniority;
+  /** Ingested title band(s); user preset still uses a single `seniority` on {@link FilterPreset}. */
+  seniorities?: Seniority[];
 }
 
 /** Full job row returned by `GET /api/jobs` (dashboard). */
-export interface DashboardJob extends Omit<Job, "stack" | "seniority" | "url"> {
+export interface DashboardJob extends Omit<Job, "stack" | "seniorities" | "url"> {
   url: string;
   stack: string[];
-  seniority: Seniority | null;
+  seniorities: Seniority[];
 }
 
 export interface DashboardJobsPage {
@@ -66,6 +67,10 @@ export interface DashboardJobsPage {
   totalPages: number;
 }
 
+/**
+ * User job-matching preferences. The user picks exactly one `seniority` string;
+ * ingested jobs may list a `seniorities` band (array) on each row.
+ */
 export interface FilterPreset {
   role: UserRole;
   stack: StackOption[];
