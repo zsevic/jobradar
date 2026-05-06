@@ -28,6 +28,8 @@ export type StackOption =
   | "next.js"
   | "nuxt"
   | "svelte"
+  | "typescript"
+  | "javascript"
   | "react native"
   | "swift"
   | "kotlin"

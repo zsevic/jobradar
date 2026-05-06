@@ -84,7 +84,16 @@ export const noStackRoles: UserRole[] = [
 
 export const stackByRole: Record<UserRole, StackOption[]> = {
   backend: ["node.js", "python", "golang", "rust", "java", ".net", "php"],
-  frontend: ["react", "angular", "vue", "next.js", "nuxt", "svelte"],
+  frontend: [
+    "react",
+    "angular",
+    "vue",
+    "next.js",
+    "nuxt",
+    "svelte",
+    "typescript",
+    "javascript",
+  ],
   fullstack: [
     "node.js",
     "python",
@@ -99,6 +108,8 @@ export const stackByRole: Record<UserRole, StackOption[]> = {
     "next.js",
     "nuxt",
     "svelte",
+    "typescript",
+    "javascript",
   ],
   engineer: [
     "node.js",
@@ -114,6 +125,8 @@ export const stackByRole: Record<UserRole, StackOption[]> = {
     "next.js",
     "nuxt",
     "svelte",
+    "typescript",
+    "javascript",
   ],
   mobile: ["react native", "swift", "kotlin", "flutter", "dart"],
   devops: [],
