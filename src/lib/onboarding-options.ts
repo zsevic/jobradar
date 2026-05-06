@@ -6,15 +6,15 @@ export const roleOptions: UserRole[] = [
   "fullstack",
   "engineer",
   "mobile",
-  "devops",
-  "qa",
-  "management",
+  "solutions",
   "ai",
   "data",
-  "solutions",
-  "recruiter",
+  "devops",
+  "qa",
   "designer",
   "security",
+  "management",
+  "recruiter",
 ];
 
 /** Human-readable labels for selects and dashboard. */
@@ -31,7 +31,7 @@ export const roleLabels: Record<UserRole, string> = {
   data: "Data / Analytics",
   solutions: "Solutions / Pre-sales",
   recruiter: "Recruiter / Talent",
-  designer: "Designer / UX",
+  designer: "UI / UX Designer",
   security: "Security",
 };
 
