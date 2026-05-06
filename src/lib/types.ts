@@ -11,6 +11,7 @@ export type UserRole =
   | "data"
   | "solutions"
   | "recruiter"
+  | "designer"
   | "security";
 
 export type StackOption =

@@ -13,6 +13,7 @@ export const roleOptions: UserRole[] = [
   "data",
   "solutions",
   "recruiter",
+  "designer",
   "security",
 ];
 
@@ -30,6 +31,7 @@ export const roleLabels: Record<UserRole, string> = {
   data: "Data / Analytics",
   solutions: "Solutions / Pre-sales",
   recruiter: "Recruiter / Talent",
+  designer: "Designer / UX",
   security: "Security",
 };
 
@@ -76,6 +78,7 @@ export const noStackRoles: UserRole[] = [
   "data",
   "solutions",
   "recruiter",
+  "designer",
   "security",
 ];
 
@@ -120,5 +123,6 @@ export const stackByRole: Record<UserRole, StackOption[]> = {
   data: [],
   solutions: [],
   recruiter: [],
+  designer: [],
   security: [],
 };

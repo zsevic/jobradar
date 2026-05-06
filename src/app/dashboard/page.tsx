@@ -113,6 +113,7 @@ export default function DashboardPage() {
     presetRole === "data" ||
     presetRole === "solutions" ||
     presetRole === "recruiter" ||
+    presetRole === "designer" ||
     presetRole === "security";
 
   const isPreviewing =
