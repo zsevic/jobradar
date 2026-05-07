@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { GoogleAnalytics } from "@/components/google-analytics";
 import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
       className={`${inter.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-950 text-slate-100">
+        <GoogleAnalytics />
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
