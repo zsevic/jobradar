@@ -206,3 +206,26 @@ export async function fetchDashboardJobs(
   });
   return parseJson<DashboardJobsPage>(response);
 }
+
+export async function unsubscribeFromEmailToken(token: string): Promise<void> {
+  const response = await fetch(
+    `${backendBaseUrl}/notifications/unsubscribe?token=${encodeURIComponent(token)}`,
+    {
+      method: "GET",
+      cache: "no-store",
+    },
+  );
+  if (!response.ok) {
+    const text = await response.text();
+    let message = "Unsubscribe failed";
+    if (text.trim()) {
+      try {
+        const errorBody = JSON.parse(text) as { message?: string };
+        message = errorBody.message ?? message;
+      } catch {
+        message = text.slice(0, 200);
+      }
+    }
+    throw new Error(message);
+  }
+}

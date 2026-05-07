@@ -27,6 +27,7 @@ export default function SettingsPage() {
   const presetSyncKey = presetQuery.data ? JSON.stringify(presetQuery.data) : "";
 
   const [draftAlerts, setDraftAlerts] = useState<boolean | null>(null);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
 
   useEffect(() => {
     setDraftAlerts(null);
@@ -40,7 +41,11 @@ export default function SettingsPage() {
     mutationFn: updateAlertsEnabled,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["preset"] });
-      window.alert("Notification preference saved.");
+      setSaveNotice(
+        alertsEnabled
+          ? "Email alerts are now activated."
+          : "Email alerts are now deactivated.",
+      );
     },
   });
 
@@ -49,6 +54,7 @@ export default function SettingsPage() {
     if (normalizedPreset == null) {
       return;
     }
+    setSaveNotice(null);
     saveMutation.mutate(alertsEnabled);
   }
 
@@ -120,13 +126,22 @@ export default function SettingsPage() {
             <input
               type="checkbox"
               checked={alertsEnabled}
-              onChange={(event) => setDraftAlerts(event.target.checked)}
+              onChange={(event) => {
+                setDraftAlerts(event.target.checked);
+                setSaveNotice(null);
+              }}
               className="h-4 w-4 accent-cyan-400"
             />
           </label>
 
           {saveMutation.error && (
             <p className="text-sm text-red-300">{(saveMutation.error as Error).message}</p>
+          )}
+
+          {saveNotice && (
+            <p className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+              {saveNotice}
+            </p>
           )}
 
           <button
