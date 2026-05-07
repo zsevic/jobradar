@@ -99,7 +99,7 @@ export default function SettingsPage() {
           <div>
             <h1 className="text-2xl font-semibold">Settings</h1>
             <p className="mt-2 text-sm text-slate-400">
-              Manage email notifications for new job matches.
+              Manage your email notifications and Gumroad subscription.
             </p>
             <p className="mt-3 text-sm text-slate-500">
               Job filters can be edited from your{" "}
@@ -120,47 +120,62 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <form className="mt-6 space-y-5" onSubmit={onSubmit}>
-          <label className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/70 px-4 py-3">
-            <span className="text-sm text-slate-200">Email alerts for new matches</span>
-            <input
-              type="checkbox"
-              checked={alertsEnabled}
-              onChange={(event) => {
-                setDraftAlerts(event.target.checked);
-                setSaveNotice(null);
-              }}
-              className="h-4 w-4 accent-cyan-400"
-            />
-          </label>
-
-          {saveMutation.error && (
-            <p className="text-sm text-red-300">{(saveMutation.error as Error).message}</p>
-          )}
-
-          {saveNotice && (
-            <p className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
-              {saveNotice}
+        <div className="mt-6 space-y-5">
+          <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+            <h2 className="text-base font-semibold text-slate-100">Email notifications</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Control whether JobRadar sends you new job digest emails.
             </p>
-          )}
 
-          <button
-            type="submit"
-            disabled={saveDisabled || saveMutation.isPending}
-            className="w-full rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-slate-950 disabled:opacity-60"
-          >
-            {saveMutation.isPending ? "Saving..." : "Save"}
-          </button>
+            <form className="mt-4 space-y-4" onSubmit={onSubmit}>
+              <label className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/70 px-4 py-3">
+                <span className="text-sm text-slate-200">Email alerts for new jobs</span>
+                <input
+                  type="checkbox"
+                  checked={alertsEnabled}
+                  onChange={(event) => {
+                    setDraftAlerts(event.target.checked);
+                    setSaveNotice(null);
+                  }}
+                  className="h-4 w-4 accent-cyan-400"
+                />
+              </label>
 
-          <a
-            href="https://sparxno.gumroad.com/l/jobradar"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 flex w-full items-center justify-center rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
-          >
-            Manage subscription
-          </a>
-        </form>
+              {saveMutation.error && (
+                <p className="text-sm text-red-300">{(saveMutation.error as Error).message}</p>
+              )}
+
+              {saveNotice && (
+                <p className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+                  {saveNotice}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={saveDisabled || saveMutation.isPending}
+                className="w-full rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-slate-950 disabled:opacity-60"
+              >
+                {saveMutation.isPending ? "Saving..." : "Save email settings"}
+              </button>
+            </form>
+          </section>
+
+          <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+            <h2 className="text-base font-semibold text-slate-100">Gumroad subscription</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Open Gumroad to manage billing, license, and subscription status.
+            </p>
+            <a
+              href="https://sparxno.gumroad.com/l/jobradar"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 flex w-full items-center justify-center rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
+            >
+              Manage subscription on Gumroad
+            </a>
+          </section>
+        </div>
       </div>
     </main>
   );
