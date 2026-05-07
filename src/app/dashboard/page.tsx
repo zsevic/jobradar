@@ -36,6 +36,7 @@ export default function DashboardPage() {
     null,
   );
   const [formError, setFormError] = useState<string | null>(null);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const limit = 20;
 
   const presetQuery = useQuery({
@@ -73,7 +74,10 @@ export default function DashboardPage() {
     mutationFn: savePreset,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["preset"] });
-      window.alert("Settings updated successfully.");
+      setSaveNotice("Your filters were saved to your account settings.");
+    },
+    onError: () => {
+      setSaveNotice(null);
     },
   });
 
@@ -139,6 +143,7 @@ export default function DashboardPage() {
 
   function onApplyFilters() {
     setFormError(null);
+    setSaveNotice(null);
     if (!draft) {
       return;
     }
@@ -153,6 +158,7 @@ export default function DashboardPage() {
 
   function onResetFilters() {
     setFormError(null);
+    setSaveNotice(null);
     setDraft(savedPreset);
     setAppliedOverride(null);
     setPage(1);
@@ -160,6 +166,7 @@ export default function DashboardPage() {
 
   function onSaveToSettings() {
     setFormError(null);
+    setSaveNotice(null);
     if (!draft) {
       setFormError("Nothing to save.");
       return;
@@ -244,7 +251,13 @@ export default function DashboardPage() {
       {savedPreset && draft && editorOpen && (
         <section className="mb-6 card p-4">
           <div className="space-y-4">
-            <FilterEditor value={draft} onChange={setDraft} />
+            <FilterEditor
+              value={draft}
+              onChange={(next) => {
+                setSaveNotice(null);
+                setDraft(next);
+              }}
+            />
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -279,6 +292,11 @@ export default function DashboardPage() {
             {saveMutation.error && (
               <p className="text-sm text-red-300">
                 {(saveMutation.error as Error).message}
+              </p>
+            )}
+            {saveNotice && (
+              <p className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+                {saveNotice}
               </p>
             )}
           </div>
