@@ -83,7 +83,17 @@ export const noStackRoles: UserRole[] = [
 ];
 
 export const stackByRole: Record<UserRole, StackOption[]> = {
-  backend: ["node.js", "python", "golang", "rust", "java", ".net", "php"],
+  backend: [
+    "node.js",
+    "python",
+    "golang",
+    "rust",
+    "java",
+    ".net",
+    "php",
+    "typescript",
+    "javascript",
+  ],
   frontend: [
     "react",
     "angular",
