@@ -15,7 +15,10 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JobRadar",
+  title: {
+    default: "JobRadar",
+    template: "%s · JobRadar",
+  },
   description: "Track fresh jobs and apply early",
   icons: {
     icon: [{ url: "/logo.svg", type: "image/svg+xml" }],

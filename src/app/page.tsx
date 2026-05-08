@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthenticatedEntryRedirect } from "@/components/authenticated-entry-redirect";
 import { LatestJobsSection } from "@/components/latest-jobs-section";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "Home · JobRadar",
+  },
+};
 
 export default function Home() {
   return (

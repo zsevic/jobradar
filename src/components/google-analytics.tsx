@@ -35,7 +35,10 @@ function GoogleAnalyticsRouteReporter() {
       isFirstNavigation.current = false;
       return;
     }
-    window.gtag("config", GA_MEASUREMENT_ID, { page_path: path });
+    window.gtag("config", GA_MEASUREMENT_ID, {
+      page_path: path,
+      page_title: document.title,
+    });
   }, [pathname, searchParams]);
 
   return null;
