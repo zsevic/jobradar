@@ -10,6 +10,10 @@ import {
   seniorityOptions,
   stackByRole,
 } from "@/lib/onboarding-options";
+import {
+  applyLocationToggle,
+  normalizeLocationPreset,
+} from "@/lib/location-preset";
 import type {
   FilterPreset,
   LocationOption,
@@ -34,9 +38,16 @@ export function normalizePreset(preset: FilterPreset): FilterPreset {
       })();
 
   if (rolesWithoutSeniorityFilter.includes(withStack.role)) {
-    return { ...withStack, seniority: managementDefaultSeniority };
+    return {
+      ...withStack,
+      seniority: managementDefaultSeniority,
+      locations: normalizeLocationPreset(withStack.locations),
+    };
   }
-  return withStack;
+  return {
+    ...withStack,
+    locations: normalizeLocationPreset(withStack.locations),
+  };
 }
 
 export function presetsEqual(
@@ -81,10 +92,10 @@ export function FilterEditor({ value, onChange }: FilterEditorProps) {
   }
 
   function toggleLocation(loc: LocationOption) {
-    const nextLocations = locations.includes(loc)
-      ? locations.filter((entry) => entry !== loc)
-      : [...locations, loc];
-    onChange({ ...value, locations: nextLocations });
+    onChange({
+      ...value,
+      locations: applyLocationToggle(locations, loc),
+    });
   }
 
   function onRoleChange(nextRole: UserRole) {

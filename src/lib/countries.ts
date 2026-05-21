@@ -129,7 +129,7 @@ function buildCountriesFromDisplayNames(display: Intl.DisplayNames): CountryOpti
 
 /**
  * Countries currently in `selectedLocationNames` appear first (same order as in the preset),
- * then remaining entries sorted A–Z. `"remote"` is ignored; it is not a country row.
+ * then remaining entries sorted A–Z. `"remote"` and `"fully-remote"` are ignored; they are not country rows.
  */
 export function sortCountriesSelectedFirst(
   filteredCountries: CountryOption[],
@@ -139,6 +139,9 @@ export function sortCountriesSelectedFirst(
   const orderedSelected: CountryOption[] = [];
 
   for (const loc of selectedLocationNames) {
+    if (loc === "remote" || loc === "fully-remote") {
+      continue;
+    }
     const country = filteredCountries.find((c) => c.name === loc);
     if (country && !selectedCodes.has(country.code)) {
       selectedCodes.add(country.code);

@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { fetchPreset, savePreset } from "@/lib/api";
 import { LocationSelector } from "@/components/location-selector";
 import { getAllCountryOptions, getCountryNameFromLocale } from "@/lib/countries";
+import { applyLocationToggle } from "@/lib/location-preset";
 import {
   managementDefaultSeniority,
   noStackRoles,
@@ -73,11 +74,7 @@ export default function OnboardingPage() {
   }
 
   function toggleLocation(value: LocationOption) {
-    setLocations((current) =>
-      current.includes(value)
-        ? current.filter((entry) => entry !== value)
-        : [...current, value],
-    );
+    setLocations((current) => applyLocationToggle(current, value));
   }
 
   function onRoleChange(nextRole: UserRole) {

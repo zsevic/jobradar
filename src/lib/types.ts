@@ -40,6 +40,7 @@ export type Seniority = "intern" | "junior" | "mid" | "senior" | "staff";
 
 export type LocationOption = string;
 export const REMOTE_LOCATION = "remote";
+export const FULLY_REMOTE_LOCATION = "fully-remote";
 
 export interface Job {
   id: string;
