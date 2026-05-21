@@ -16,12 +16,20 @@ import {
   roleLabels,
   rolesWithoutSeniorityFilter,
 } from "@/lib/onboarding-options";
+import { isFullyRemoteOnly } from "@/lib/location-preset";
 import type { DashboardJob, FilterPreset, UserRole } from "@/lib/types";
-import { REMOTE_LOCATION } from "@/lib/types";
+import { FULLY_REMOTE_LOCATION, REMOTE_LOCATION } from "@/lib/types";
 import { formatPostedAgo } from "@/lib/utils";
 
 function formatLocationLabel(location: string): string {
+  if (location === FULLY_REMOTE_LOCATION) {
+    return "Fully remote";
+  }
   return location === REMOTE_LOCATION ? "Remote" : location;
+}
+
+function isPlainRemoteLocation(location: string): boolean {
+  return location.trim().toLowerCase() === REMOTE_LOCATION;
 }
 
 export default function DashboardPage() {
@@ -107,6 +115,9 @@ export default function DashboardPage() {
     Boolean(jobsQuery.data?.items.length) && feedBottomVisible && hasScrolledDown;
 
   const displayPreset = jobFilters;
+  const fullyRemoteFilterActive = Boolean(
+    displayPreset && isFullyRemoteOnly(displayPreset.locations),
+  );
   const presetRole = displayPreset?.role;
   const presetHasNoStackFilter =
     presetRole != null && noStackRoles.includes(presetRole);
@@ -348,14 +359,18 @@ export default function DashboardPage() {
                     new
                   </span>
                 )}
-                {job.isRemote && (
+                {job.isRemote && !fullyRemoteFilterActive && (
                   <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-xs font-medium text-indigo-200">
                     remote
                   </span>
                 )}
               </div>
               <p className="mt-1 text-slate-300">
-                {job.company} • {job.location}
+                {job.company}
+                {!fullyRemoteFilterActive &&
+                  !isPlainRemoteLocation(job.location) && (
+                    <> • {job.location}</>
+                  )}
               </p>
               <p className="mt-1 text-sm text-slate-400">
                 {formatPostedAgo(job.postedAt)}
