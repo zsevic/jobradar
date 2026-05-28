@@ -12,6 +12,8 @@ const defaultHeaders = {
 };
 const backendBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api";
+const RETRYABLE_STATUS_CODES = new Set([502, 503, 504]);
+const RETRY_DELAYS_MS = [300, 700, 1500] as const;
 
 function toFilterPreset(value: FilterPreset): FilterPreset {
   return {
@@ -41,6 +43,45 @@ async function parseJson<T>(response: Response): Promise<T> {
     throw new Error("Empty response body");
   }
   return JSON.parse(text) as T;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function withJitter(ms: number): number {
+  return ms + Math.floor(Math.random() * 200);
+}
+
+async function fetchWithRetry(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < RETRY_DELAYS_MS.length; attempt += 1) {
+    try {
+      const response = await fetch(input, init);
+      if (!RETRYABLE_STATUS_CODES.has(response.status)) {
+        return response;
+      }
+      if (attempt === RETRY_DELAYS_MS.length - 1) {
+        return response;
+      }
+    } catch (error) {
+      lastError = error;
+      if (attempt === RETRY_DELAYS_MS.length - 1) {
+        throw error;
+      }
+    }
+
+    await sleep(withJitter(RETRY_DELAYS_MS[attempt]));
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+  throw new Error("Request failed after retries");
 }
 
 function getAuthHeaders() {
@@ -109,14 +150,14 @@ export async function fetchLatestJobs(
     country && country.trim()
       ? `?country=${encodeURIComponent(country.trim())}`
       : "";
-  const response = await fetch(`${backendBaseUrl}/jobs/latest${qs}`, {
+  const response = await fetchWithRetry(`${backendBaseUrl}/jobs/latest${qs}`, {
     cache: "no-store",
   });
   return parseJson<LatestJobsPreviewResponse>(response);
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  const response = await fetch(`${backendBaseUrl}/auth/login`, {
+  const response = await fetchWithRetry(`${backendBaseUrl}/auth/login`, {
     method: "POST",
     headers: defaultHeaders,
     body: JSON.stringify(payload),
@@ -126,7 +167,7 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
 
 export async function savePreset(payload: FilterPreset): Promise<FilterPreset> {
   const safePayload = toFilterPreset(payload);
-  const response = await fetch(`${backendBaseUrl}/onboarding/preset`, {
+  const response = await fetchWithRetry(`${backendBaseUrl}/onboarding/preset`, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(safePayload),
@@ -138,7 +179,7 @@ export async function savePreset(payload: FilterPreset): Promise<FilterPreset> {
 export async function updateAlertsEnabled(
   alertsEnabled: boolean,
 ): Promise<FilterPreset> {
-  const response = await fetch(`${backendBaseUrl}/onboarding/alerts`, {
+  const response = await fetchWithRetry(`${backendBaseUrl}/onboarding/alerts`, {
     method: "PATCH",
     headers: getAuthHeaders(),
     body: JSON.stringify({ alertsEnabled }),
@@ -148,7 +189,7 @@ export async function updateAlertsEnabled(
 }
 
 export async function fetchPreset(): Promise<FilterPreset | null> {
-  const response = await fetch(`${backendBaseUrl}/onboarding/preset`, {
+  const response = await fetchWithRetry(`${backendBaseUrl}/onboarding/preset`, {
     method: "GET",
     headers: getAuthHeaders(),
     cache: "no-store",
@@ -200,15 +241,18 @@ export async function fetchDashboardJobs(
     }
     params.set("alertsEnabled", String(filters.alertsEnabled));
   }
-  const response = await fetch(`${backendBaseUrl}/jobs?${params.toString()}`, {
-    headers: getAuthHeaders(),
-    cache: "no-store",
-  });
+  const response = await fetchWithRetry(
+    `${backendBaseUrl}/jobs?${params.toString()}`,
+    {
+      headers: getAuthHeaders(),
+      cache: "no-store",
+    },
+  );
   return parseJson<DashboardJobsPage>(response);
 }
 
 export async function unsubscribeFromEmailToken(token: string): Promise<void> {
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${backendBaseUrl}/notifications/unsubscribe?token=${encodeURIComponent(token)}`,
     {
       method: "GET",
