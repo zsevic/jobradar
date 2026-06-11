@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { fetchPreset, savePreset } from "@/lib/api";
 import { LocationSelector } from "@/components/location-selector";
-import { getAllCountryOptions, getCountryNameFromLocale } from "@/lib/countries";
 import { applyLocationToggle } from "@/lib/location-preset";
 import {
   managementDefaultSeniority,
@@ -26,23 +25,12 @@ import {
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const initialDetectedCountry = useMemo(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    return (
-      getCountryNameFromLocale(navigator.languages?.[0], getAllCountryOptions()) ??
-      getCountryNameFromLocale(navigator.language, getAllCountryOptions())
-    );
-  }, []);
   const [role, setRole] = useState<UserRole>("backend");
   const [stack, setStack] = useState<StackOption[]>(["node.js"]);
-  const [seniority, setSeniority] = useState<Seniority>("mid");
-  const [locations, setLocations] = useState<LocationOption[]>(
-    initialDetectedCountry
-      ? [REMOTE_LOCATION, initialDetectedCountry]
-      : [REMOTE_LOCATION],
-  );
+  const [seniority, setSeniority] = useState<Seniority>("senior");
+  const [locations, setLocations] = useState<LocationOption[]>([
+    REMOTE_LOCATION,
+  ]);
   const isStackRequired = !noStackRoles.includes(role);
   const isSeniorityConfigurable = !rolesWithoutSeniorityFilter.includes(role);
   const availableStackOptions = useMemo(() => stackByRole[role], [role]);

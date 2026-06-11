@@ -3,8 +3,6 @@ import {
   FilterPreset,
   Job,
   LatestJobsPreviewResponse,
-  LoginPayload,
-  LoginResponse,
 } from "@/lib/types";
 
 const defaultHeaders = {
@@ -25,14 +23,49 @@ function toFilterPreset(value: FilterPreset): FilterPreset {
   };
 }
 
+type ApiErrorBody = {
+  error?: string;
+  message?: string | { error?: string; message?: string };
+};
+
+function extractApiErrorMessage(
+  status: number,
+  errorBody: ApiErrorBody,
+): string {
+  const nested =
+    typeof errorBody.message === "object" && errorBody.message !== null
+      ? errorBody.message
+      : null;
+  const code = nested?.error ?? errorBody.error;
+  const text =
+    nested?.message ??
+    (typeof errorBody.message === "string" ? errorBody.message : undefined);
+
+  if (status === 403 && code === "sponsorship_required") {
+    return (
+      text ??
+      "Access requires an active GitHub Sponsors subscription to @zsevic. If your sponsorship expired, renew at github.com/sponsors/zsevic and sign in again."
+    );
+  }
+  return text ?? "Request failed";
+}
+
 async function parseJson<T>(response: Response): Promise<T> {
   const text = await response.text();
   if (!response.ok) {
     let message = "Request failed";
     if (text.trim()) {
       try {
-        const errorBody = JSON.parse(text) as { message?: string };
-        message = errorBody.message ?? message;
+        const errorBody = JSON.parse(text) as ApiErrorBody;
+        message = extractApiErrorMessage(response.status, errorBody);
+        if (
+          response.status === 403 &&
+          (errorBody.error === "sponsorship_required" ||
+            (typeof errorBody.message === "object" &&
+              errorBody.message?.error === "sponsorship_required"))
+        ) {
+          clearAuthSession();
+        }
       } catch {
         message = text.slice(0, 200);
       }
@@ -156,15 +189,6 @@ export async function fetchLatestJobs(
   return parseJson<LatestJobsPreviewResponse>(response);
 }
 
-export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  const response = await fetchWithRetry(`${backendBaseUrl}/auth/login`, {
-    method: "POST",
-    headers: defaultHeaders,
-    body: JSON.stringify(payload),
-  });
-  return parseJson<LoginResponse>(response);
-}
-
 export async function savePreset(payload: FilterPreset): Promise<FilterPreset> {
   const safePayload = toFilterPreset(payload);
   const response = await fetchWithRetry(`${backendBaseUrl}/onboarding/preset`, {
@@ -202,8 +226,16 @@ export async function fetchPreset(): Promise<FilterPreset | null> {
     let message = "Request failed";
     if (text.trim()) {
       try {
-        const errorBody = JSON.parse(text) as { message?: string };
-        message = errorBody.message ?? message;
+        const errorBody = JSON.parse(text) as ApiErrorBody;
+        message = extractApiErrorMessage(response.status, errorBody);
+        if (
+          response.status === 403 &&
+          (errorBody.error === "sponsorship_required" ||
+            (typeof errorBody.message === "object" &&
+              errorBody.message?.error === "sponsorship_required"))
+        ) {
+          clearAuthSession();
+        }
       } catch {
         message = text.slice(0, 200);
       }

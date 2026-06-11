@@ -83,19 +83,6 @@ export interface FilterPreset {
   alertsEnabled: boolean;
 }
 
-export interface LoginPayload {
-  email: string;
-  licenseKey: string;
-}
-
-export interface LoginResponse {
-  accessToken: string;
-  user: {
-    id: string;
-    email: string;
-  };
-}
-
 export interface LatestJobsPreviewResponse {
   items: Job[];
   total: number;
