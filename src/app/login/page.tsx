@@ -4,9 +4,6 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { AuthenticatedEntryRedirect } from "@/components/authenticated-entry-redirect";
 
-const backendBaseUrl =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api";
-
 const SPONSOR_REQUIRED_MESSAGE =
   "Access requires an active GitHub Sponsors subscription to @zsevic. If your sponsorship expired, renew at github.com/sponsors/zsevic and sign in again.";
 
@@ -45,7 +42,7 @@ function LoginContent() {
         )}
 
         <a
-          href={`${backendBaseUrl}/auth/github`}
+          href="/api/auth/github"
           className="mt-6 flex w-full items-center justify-center gap-2.5 rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-slate-950 hover:bg-cyan-300"
         >
           <svg

@@ -9,7 +9,7 @@ const defaultHeaders = {
   "Content-Type": "application/json",
 };
 const backendBaseUrl =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3002/api";
 const RETRYABLE_STATUS_CODES = new Set([502, 503, 504]);
 const RETRY_DELAYS_MS = [300, 700, 1500] as const;
 
