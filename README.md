@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JobRadar
 
-## Getting Started
+Public job browser for [jobradar.tech](https://jobradar.tech). Pick your filters, browse fresh roles from verified boards, and apply early.
 
-First, run the development server:
+Backend API: [jobradar-server](https://github.com/zsevic/jobradar-server) (NestJS).
+
+## Routes
+
+| Path | Description |
+|------|-------------|
+| `/` | Landing page with latest jobs preview |
+| `/dashboard` | Filterable job feed (role, stack, seniority, location) |
+
+Filters are saved in `localStorage` (`jobradar_browse_filters`). Returning visitors with saved filters are redirected from `/` to `/dashboard`.
+
+## Local development
+
+### Prerequisites
+
+- Node.js 20+
+- [jobradar-server](https://github.com/zsevic/jobradar-server) running locally (Postgres, Redis, API)
+
+### Setup
+
+```bash
+npm install
+cp .env.example .env
+```
+
+Ensure `NEXT_PUBLIC_API_BASE_URL` points at your backend, e.g. `http://localhost:3002/api`.
+
+### Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3001 (frontend dev server).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+In another terminal, start the backend:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd ../jobradar-server
+docker compose up -d
+npm run start:dev
+```
 
-## Learn More
+Use `PORT=3002` in the backend `.env` to match the default frontend API URL.
 
-To learn more about Next.js, take a look at the following resources:
+### Other commands
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+npm run start   # production build (default Next.js port 3000 unless configured)
+npm run lint
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Environment
 
-## Deploy on Vercel
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_API_BASE_URL` | Backend API base URL (required) |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Google Analytics 4 ID; omit to disable |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Production
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Frontend: https://jobradar.tech  
+Backend: https://jobradar-server-production.up.railway.app/api
+
+Set `NEXT_PUBLIC_API_BASE_URL` to the production API URL in your hosting env.
