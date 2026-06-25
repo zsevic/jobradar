@@ -120,12 +120,6 @@ export default function DashboardPage() {
     presetRole === "designer" ||
     presetRole === "security";
 
-  const isPreviewing =
-    appliedOverride != null && !presetsEqual(appliedOverride, defaultPreset);
-
-  const hasUnsavedDraft =
-    draft != null && !presetsEqual(draft, defaultPreset);
-
   function validateDraftForApply(value: FilterPreset): string | null {
     const stackRequired = !noStackRoles.includes(value.role);
     if (stackRequired && value.stack.length === 0) {
@@ -177,9 +171,6 @@ export default function DashboardPage() {
           {displayPreset && (
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               <span className="font-medium text-slate-300">Active filters:</span>{" "}
-              {isPreviewing && (
-                <span className="mr-1 text-amber-200/90">(preview)</span>
-              )}
               {roleLabels[displayPreset.role as UserRole] ?? displayPreset.role}
               {!noStackRoles.includes(displayPreset.role) &&
                 displayPreset.stack.length > 0 && (
@@ -204,11 +195,6 @@ export default function DashboardPage() {
               className="inline-flex flex-wrap items-center gap-2 rounded-lg border border-cyan-500/60 px-3 py-1.5 text-sm text-cyan-200 hover:bg-cyan-500/10"
             >
               <span>{editorOpen ? "Hide filters" : "Edit filters"}</span>
-              {(hasUnsavedDraft || isPreviewing) && (
-                <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-200">
-                  Unsaved / preview
-                </span>
-              )}
             </button>
           )}
         </div>
