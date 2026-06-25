@@ -61,10 +61,3 @@ npm run lint
 |----------|-------------|
 | `NEXT_PUBLIC_API_BASE_URL` | Backend API base URL (required) |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Google Analytics 4 ID; omit to disable |
-
-## Production
-
-Frontend: https://jobradar.tech  
-Backend: https://jobradar-server-production.up.railway.app/api
-
-Set `NEXT_PUBLIC_API_BASE_URL` to the production API URL in your hosting env.
