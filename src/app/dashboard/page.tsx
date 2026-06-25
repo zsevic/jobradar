@@ -1,21 +1,25 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   FilterEditor,
   normalizePreset,
   presetsEqual,
 } from "@/components/filter-editor";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { fetchDashboardJobs, fetchPreset, savePreset } from "@/lib/api";
+import { fetchDashboardJobs } from "@/lib/api";
+import {
+  discardLegacyAuthStorage,
+  readBrowseFilters,
+  writeBrowseFilters,
+} from "@/lib/browse-filters-storage";
+import { defaultBrowsePreset } from "@/lib/default-browse-preset";
 import {
   formatJobSeniorities,
-  managementDefaultSeniority,
   noStackRoles,
   roleLabels,
   rolesWithoutSeniorityFilter,
-} from "@/lib/onboarding-options";
+} from "@/lib/filter-options";
 import { isFullyRemoteOnly } from "@/lib/location-preset";
 import type { DashboardJob, FilterPreset, UserRole } from "@/lib/types";
 import { FULLY_REMOTE_LOCATION, REMOTE_LOCATION } from "@/lib/types";
@@ -33,7 +37,6 @@ function isPlainRemoteLocation(location: string): boolean {
 }
 
 export default function DashboardPage() {
-  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const feedBottomRef = useRef<HTMLDivElement>(null);
   const [feedBottomVisible, setFeedBottomVisible] = useState(false);
@@ -44,49 +47,35 @@ export default function DashboardPage() {
     null,
   );
   const [formError, setFormError] = useState<string | null>(null);
-  const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const limit = 20;
 
-  const presetQuery = useQuery({
-    queryKey: ["preset"],
-    queryFn: fetchPreset,
-    retry: false,
-  });
-
-  const savedPresetFingerprint = presetQuery.data
-    ? JSON.stringify(presetQuery.data)
-    : "";
-
-  const savedPreset = useMemo(() => {
-    if (!presetQuery.data) {
-      return null;
-    }
-    return normalizePreset(presetQuery.data);
-  }, [savedPresetFingerprint]);
+  const defaultPreset = useMemo(
+    () => normalizePreset(defaultBrowsePreset),
+    [],
+  );
 
   useEffect(() => {
-    setDraft(savedPreset);
+    discardLegacyAuthStorage();
+    const stored = readBrowseFilters();
+    if (stored) {
+      setDraft(stored);
+      setAppliedOverride(stored);
+      return;
+    }
+    setDraft(defaultPreset);
     setAppliedOverride(null);
-  }, [savedPreset]);
+  }, [defaultPreset]);
 
-  const jobFilters = appliedOverride ?? savedPreset ?? undefined;
-  const jobFiltersKey = jobFilters ? JSON.stringify(jobFilters) : "";
+  const jobFilters = appliedOverride ?? defaultPreset;
+  const jobFiltersKey = JSON.stringify(jobFilters);
+
+  useEffect(() => {
+    writeBrowseFilters(jobFilters);
+  }, [jobFiltersKey, jobFilters]);
 
   const jobsQuery = useQuery({
     queryKey: ["dashboard-jobs", page, limit, jobFiltersKey],
-    queryFn: () => fetchDashboardJobs(page, limit, jobFilters ?? null),
-    enabled: presetQuery.isSuccess,
-  });
-
-  const saveMutation = useMutation({
-    mutationFn: savePreset,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["preset"] });
-      setSaveNotice("Your filters were saved to your account settings.");
-    },
-    onError: () => {
-      setSaveNotice(null);
-    },
+    queryFn: () => fetchDashboardJobs(page, limit, jobFilters),
   });
 
   useEffect(() => {
@@ -132,14 +121,10 @@ export default function DashboardPage() {
     presetRole === "security";
 
   const isPreviewing =
-    savedPreset != null &&
-    appliedOverride != null &&
-    !presetsEqual(appliedOverride, savedPreset);
+    appliedOverride != null && !presetsEqual(appliedOverride, defaultPreset);
 
   const hasUnsavedDraft =
-    draft != null &&
-    savedPreset != null &&
-    !presetsEqual(draft, savedPreset);
+    draft != null && !presetsEqual(draft, defaultPreset);
 
   function validateDraftForApply(value: FilterPreset): string | null {
     const stackRequired = !noStackRoles.includes(value.role);
@@ -154,7 +139,6 @@ export default function DashboardPage() {
 
   function onApplyFilters() {
     setFormError(null);
-    setSaveNotice(null);
     if (!draft) {
       return;
     }
@@ -163,36 +147,18 @@ export default function DashboardPage() {
       setFormError(err);
       return;
     }
-    setAppliedOverride(normalizePreset(draft));
+    const normalized = normalizePreset(draft);
+    writeBrowseFilters(normalized);
+    setAppliedOverride(normalized);
     setPage(1);
   }
 
   function onResetFilters() {
     setFormError(null);
-    setSaveNotice(null);
-    setDraft(savedPreset);
+    setDraft(defaultPreset);
     setAppliedOverride(null);
+    writeBrowseFilters(defaultPreset);
     setPage(1);
-  }
-
-  function onSaveToSettings() {
-    setFormError(null);
-    setSaveNotice(null);
-    if (!draft) {
-      setFormError("Nothing to save.");
-      return;
-    }
-    const err = validateDraftForApply(draft);
-    if (err) {
-      setFormError(err);
-      return;
-    }
-    saveMutation.mutate({
-      ...draft,
-      seniority: rolesWithoutSeniorityFilter.includes(draft.role)
-        ? managementDefaultSeniority
-        : draft.seniority,
-    });
   }
 
   const normalizedDraft = draft ? normalizePreset(draft) : null;
@@ -200,16 +166,11 @@ export default function DashboardPage() {
     normalizedDraft == null ||
     (jobFilters != null && presetsEqual(normalizedDraft, jobFilters));
 
-  const saveDisabled =
-    draft == null ||
-    savedPreset == null ||
-    presetsEqual(normalizePreset(draft), savedPreset);
-
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">
       <header id="job-feed-top" className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold">Your job feed</h1>
+          <h1 className="text-3xl font-semibold">Job feed</h1>
           <p className="mt-1 text-slate-400">
             Fresh jobs matched to your filters.
           </p>
@@ -236,7 +197,7 @@ export default function DashboardPage() {
           )}
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
-          {savedPreset && draft && (
+          {draft && (
             <button
               type="button"
               onClick={() => setEditorOpen((open) => !open)}
@@ -250,22 +211,15 @@ export default function DashboardPage() {
               )}
             </button>
           )}
-          <Link
-            href="/settings"
-            className="rounded-lg border border-cyan-500/60 px-3 py-1.5 text-sm text-cyan-200 hover:bg-cyan-500/10"
-          >
-            Settings
-          </Link>
         </div>
       </header>
 
-      {savedPreset && draft && editorOpen && (
+      {draft && editorOpen && (
         <section className="mb-6 card p-4">
           <div className="space-y-4">
             <FilterEditor
               value={draft}
               onChange={(next) => {
-                setSaveNotice(null);
                 setDraft(next);
               }}
             />
@@ -280,19 +234,9 @@ export default function DashboardPage() {
               </button>
               <button
                 type="button"
-                onClick={onSaveToSettings}
-                disabled={saveDisabled || saveMutation.isPending}
-                className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50"
-              >
-                {saveMutation.isPending ? "Saving…" : "Save to settings"}
-              </button>
-              <button
-                type="button"
                 onClick={onResetFilters}
                 disabled={
-                  savedPreset != null &&
-                  presetsEqual(draft, savedPreset) &&
-                  appliedOverride == null
+                  presetsEqual(draft, defaultPreset) && appliedOverride == null
                 }
                 className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 disabled:opacity-50"
               >
@@ -300,16 +244,6 @@ export default function DashboardPage() {
               </button>
             </div>
             {formError && <p className="text-sm text-red-300">{formError}</p>}
-            {saveMutation.error && (
-              <p className="text-sm text-red-300">
-                {(saveMutation.error as Error).message}
-              </p>
-            )}
-            {saveNotice && (
-              <p className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
-                {saveNotice}
-              </p>
-            )}
           </div>
         </section>
       )}
@@ -327,11 +261,8 @@ export default function DashboardPage() {
       {jobsQuery.data && jobsQuery.data.items.length === 0 && (
         <div className="card p-5 text-slate-400">
           No jobs match your filters right now. Try widening your{" "}
-          {presetHasNoStackFilter ? "locations" : "locations or stack"} in{" "}
-          <Link href="/settings" className="text-cyan-300 underline">
-            Settings
-          </Link>
-          {savedPreset && (
+          {presetHasNoStackFilter ? "locations" : "locations or stack"}
+          {draft && (
             <>
               {" "}
               or{" "}

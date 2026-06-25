@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { GoogleAnalytics } from "@/components/google-analytics";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 const inter = Inter({
@@ -39,7 +40,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-slate-950 text-slate-100">
         <GoogleAnalytics />
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          {children}
+          <SiteFooter />
+        </QueryProvider>
       </body>
     </html>
   );

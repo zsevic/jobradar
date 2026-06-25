@@ -72,15 +72,13 @@ export interface DashboardJobsPage {
 }
 
 /**
- * User job-matching preferences. The user picks exactly one `seniority` string;
- * ingested jobs may list a `seniorities` band (array) on each row.
+ * Job-matching filter preferences for public browsing.
  */
 export interface FilterPreset {
   role: UserRole;
   stack: StackOption[];
   seniority: Seniority;
   locations: LocationOption[];
-  alertsEnabled: boolean;
 }
 
 export interface LatestJobsPreviewResponse {

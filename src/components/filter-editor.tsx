@@ -9,7 +9,7 @@ import {
   rolesWithoutSeniorityFilter,
   seniorityOptions,
   stackByRole,
-} from "@/lib/onboarding-options";
+} from "@/lib/filter-options";
 import {
   applyLocationToggle,
   normalizeLocationPreset,
@@ -64,7 +64,6 @@ export function presetsEqual(
   return (
     a.role === b.role &&
     a.seniority === b.seniority &&
-    a.alertsEnabled === b.alertsEnabled &&
     JSON.stringify(sort(a.stack)) === JSON.stringify(sort(b.stack)) &&
     JSON.stringify(sort(a.locations)) === JSON.stringify(sort(b.locations))
   );

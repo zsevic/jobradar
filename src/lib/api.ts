@@ -1,7 +1,6 @@
 import {
   DashboardJobsPage,
   FilterPreset,
-  Job,
   LatestJobsPreviewResponse,
 } from "@/lib/types";
 
@@ -12,16 +11,6 @@ const backendBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3002/api";
 const RETRYABLE_STATUS_CODES = new Set([502, 503, 504]);
 const RETRY_DELAYS_MS = [300, 700, 1500] as const;
-
-function toFilterPreset(value: FilterPreset): FilterPreset {
-  return {
-    role: value.role,
-    stack: value.stack,
-    seniority: value.seniority,
-    locations: value.locations,
-    alertsEnabled: value.alertsEnabled,
-  };
-}
 
 type ApiErrorBody = {
   error?: string;
@@ -36,16 +25,12 @@ function extractApiErrorMessage(
     typeof errorBody.message === "object" && errorBody.message !== null
       ? errorBody.message
       : null;
-  const code = nested?.error ?? errorBody.error;
   const text =
     nested?.message ??
     (typeof errorBody.message === "string" ? errorBody.message : undefined);
 
-  if (status === 403 && code === "sponsorship_required") {
-    return (
-      text ??
-      "Access requires an active GitHub Sponsors subscription to @zsevic. If your sponsorship expired, renew at github.com/sponsors/zsevic and sign in again."
-    );
+  if (status === 429) {
+    return text ?? "Too many requests. Please wait a moment and try again.";
   }
   return text ?? "Request failed";
 }
@@ -58,14 +43,6 @@ async function parseJson<T>(response: Response): Promise<T> {
       try {
         const errorBody = JSON.parse(text) as ApiErrorBody;
         message = extractApiErrorMessage(response.status, errorBody);
-        if (
-          response.status === 403 &&
-          (errorBody.error === "sponsorship_required" ||
-            (typeof errorBody.message === "object" &&
-              errorBody.message?.error === "sponsorship_required"))
-        ) {
-          clearAuthSession();
-        }
       } catch {
         message = text.slice(0, 200);
       }
@@ -117,29 +94,6 @@ async function fetchWithRetry(
   throw new Error("Request failed after retries");
 }
 
-function getAuthHeaders() {
-  if (typeof window === "undefined") {
-    return defaultHeaders;
-  }
-  const token = localStorage.getItem("jobradar_token");
-  if (!token) {
-    return defaultHeaders;
-  }
-  return {
-    ...defaultHeaders,
-    Authorization: `Bearer ${token}`,
-  };
-}
-
-/** Removes stored session tokens (client-only). */
-export function clearAuthSession(): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-  localStorage.removeItem("jobradar_token");
-  localStorage.removeItem("jobradar_email");
-}
-
 const VISITOR_COUNTRY_SESSION_KEY = "jobradar_country";
 
 /**
@@ -189,70 +143,6 @@ export async function fetchLatestJobs(
   return parseJson<LatestJobsPreviewResponse>(response);
 }
 
-export async function savePreset(payload: FilterPreset): Promise<FilterPreset> {
-  const safePayload = toFilterPreset(payload);
-  const response = await fetchWithRetry(`${backendBaseUrl}/onboarding/preset`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(safePayload),
-  });
-  const data = await parseJson<FilterPreset>(response);
-  return toFilterPreset(data);
-}
-
-export async function updateAlertsEnabled(
-  alertsEnabled: boolean,
-): Promise<FilterPreset> {
-  const response = await fetchWithRetry(`${backendBaseUrl}/onboarding/alerts`, {
-    method: "PATCH",
-    headers: getAuthHeaders(),
-    body: JSON.stringify({ alertsEnabled }),
-  });
-  const data = await parseJson<FilterPreset>(response);
-  return toFilterPreset(data);
-}
-
-export async function fetchPreset(): Promise<FilterPreset | null> {
-  const response = await fetchWithRetry(`${backendBaseUrl}/onboarding/preset`, {
-    method: "GET",
-    headers: getAuthHeaders(),
-    cache: "no-store",
-  });
-  const text = await response.text();
-  if (response.status === 404) {
-    return null;
-  }
-  if (!response.ok) {
-    let message = "Request failed";
-    if (text.trim()) {
-      try {
-        const errorBody = JSON.parse(text) as ApiErrorBody;
-        message = extractApiErrorMessage(response.status, errorBody);
-        if (
-          response.status === 403 &&
-          (errorBody.error === "sponsorship_required" ||
-            (typeof errorBody.message === "object" &&
-              errorBody.message?.error === "sponsorship_required"))
-        ) {
-          clearAuthSession();
-        }
-      } catch {
-        message = text.slice(0, 200);
-      }
-    }
-    throw new Error(message);
-  }
-  // Nest may omit the body when no preset existed; empty body means "no preset".
-  if (!text.trim()) {
-    return null;
-  }
-  const data = JSON.parse(text) as FilterPreset | null;
-  if (data === null || data === undefined) {
-    return null;
-  }
-  return toFilterPreset(data);
-}
-
 export async function fetchDashboardJobs(
   page = 1,
   limit = 20,
@@ -271,37 +161,13 @@ export async function fetchDashboardJobs(
     for (const loc of filters.locations) {
       params.append("location", loc);
     }
-    params.set("alertsEnabled", String(filters.alertsEnabled));
   }
   const response = await fetchWithRetry(
     `${backendBaseUrl}/jobs?${params.toString()}`,
     {
-      headers: getAuthHeaders(),
+      headers: defaultHeaders,
       cache: "no-store",
     },
   );
   return parseJson<DashboardJobsPage>(response);
-}
-
-export async function unsubscribeFromEmailToken(token: string): Promise<void> {
-  const response = await fetchWithRetry(
-    `${backendBaseUrl}/notifications/unsubscribe?token=${encodeURIComponent(token)}`,
-    {
-      method: "GET",
-      cache: "no-store",
-    },
-  );
-  if (!response.ok) {
-    const text = await response.text();
-    let message = "Unsubscribe failed";
-    if (text.trim()) {
-      try {
-        const errorBody = JSON.parse(text) as { message?: string };
-        message = errorBody.message ?? message;
-      } catch {
-        message = text.slice(0, 200);
-      }
-    }
-    throw new Error(message);
-  }
 }

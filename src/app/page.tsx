@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AuthenticatedEntryRedirect } from "@/components/authenticated-entry-redirect";
+import { HomeBrowseRedirect } from "@/components/home-browse-redirect";
 import { LatestJobsSection } from "@/components/latest-jobs-section";
-
 export const metadata: Metadata = {
   title: {
     absolute: "Home · JobRadar",
@@ -11,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <AuthenticatedEntryRedirect>
+    <HomeBrowseRedirect>
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">
         <section className="card p-8">
           <p className="text-sm font-medium text-cyan-300">jobradar.tech</p>
@@ -19,12 +18,12 @@ export default function Home() {
             Increase your chances of getting hired by applying earlier.
           </h1>
           <p className="mt-4 max-w-2xl text-slate-300">
-            We scan verified job boards and send only new, relevant roles
-            matched to your profile - so you can apply early and stay ahead.
+            We scan verified job boards and surface new, relevant roles
+            matched to your filters — apply early and stay ahead.
           </p>
           <div className="mt-6 flex gap-3">
             <Link
-              href="/login"
+              href="/dashboard"
               className="rounded-xl bg-cyan-400 px-4 py-2 font-semibold text-slate-950 transition hover:bg-cyan-300"
             >
               Find jobs before everyone else
@@ -34,6 +33,6 @@ export default function Home() {
 
         <LatestJobsSection />
       </main>
-    </AuthenticatedEntryRedirect>
+    </HomeBrowseRedirect>
   );
 }
